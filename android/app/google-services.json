@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "416564911767",
+    "project_id": "charo-app-8133e",
+    "storage_bucket": "charo-app-8133e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416564911767:android:fe5b7598e9fbb8035b13d2",
+        "android_client_info": {
+          "package_name": "com.example.charo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATvaFRG5GXAleFw92NmOd_3ayCpzi-yh4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
