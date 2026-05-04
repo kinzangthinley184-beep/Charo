@@ -577,38 +577,30 @@ class _SwipeCardState extends State<_SwipeCard>
     } else if (_drag.dx < -_threshold || velocity.dx < -600) {
       _flyOut(right: false);
     } else {
+      widget.onDragUpdate?.call(0.0);
       _springAnim = Tween(begin: _drag, end: Offset.zero).animate(
           CurvedAnimation(parent: _springCtrl, curve: Curves.elasticOut));
       _springCtrl.forward(from: 0);
-      widget.onDragUpdate?.call(0.0);
     }
   }
 
   void _flyOut({required bool right}) {
     if (_isFlying) return;
     setState(() => _isFlying = true);
-
+    widget.onDragUpdate?.call(0.0);
     final screenWidth = MediaQuery.of(context).size.width;
     final targetX = right ? screenWidth * 1.8 : -screenWidth * 1.8;
-    final targetY = _drag.dy + (right ? -80.0 : -80.0);
-
     final flyCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 320),
     );
-
-    final flyAnim = Tween(begin: _drag, end: Offset(targetX, targetY)).animate(
-        CurvedAnimation(parent: flyCtrl, curve: Curves.easeIn));
-
+    final flyAnim = Tween(begin: _drag, end: Offset(targetX, _drag.dy - 80))
+        .animate(CurvedAnimation(parent: flyCtrl, curve: Curves.easeIn));
     flyAnim.addListener(() => setState(() => _drag = flyAnim.value));
     flyCtrl.forward().then((_) {
       flyCtrl.dispose();
-      widget.onDragUpdate?.call(0.0);
-      if (right) {
-        widget.onLike();
-      } else {
-        widget.onPass();
-      }
+      if (right) widget.onLike();
+      else widget.onPass();
     });
   }
 
