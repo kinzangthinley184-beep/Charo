@@ -6,6 +6,7 @@ import '../core/app_colors.dart';
 import '../models/app_user.dart';
 import '../data/mock_data.dart';
 import '../widgets/verified_badge.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class DiscoverScreen extends StatefulWidget {
   final void Function(AppUser) onSwipeRight;
@@ -108,10 +109,16 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     )
                   : _showEmpty
                       ? _EmptyState(onReset: _reset)
+                          .animate()
+                          .fadeIn(duration: 600.ms)
+                          .slideY(begin: 0.2, duration: 600.ms, curve: Curves.easeOut)
                       : _buildCardStack(),
             ),
             if (!_isNearbyMode) ...[
-              _buildActionBar(),
+              _buildActionBar()
+                  .animate(delay: 200.ms)
+                  .fadeIn(duration: 500.ms)
+                  .slideY(begin: 0.3, duration: 500.ms, curve: Curves.easeOut),
               const SizedBox(height: 12),
             ],
           ],

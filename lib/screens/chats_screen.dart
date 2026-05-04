@@ -4,6 +4,7 @@ import '../core/app_colors.dart';
 import '../models/app_user.dart';
 import '../data/mock_data.dart';
 import 'chat_detail_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ChatsScreen extends StatelessWidget {
   final List<AppUser> matches;
@@ -114,7 +115,9 @@ class ChatsScreen extends StatelessWidget {
                       time: last?.timestamp,
                       unread: unread,
                       onTap: () => _openChat(context, user),
-                    );
+                    ).animate(delay: (i * 50).ms)
+                      .fadeIn(duration: 400.ms)
+                      .slideX(begin: 0.1, duration: 400.ms, curve: Curves.easeOut);
                   },
                 ),
               ),

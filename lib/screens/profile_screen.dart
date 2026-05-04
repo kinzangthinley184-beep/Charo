@@ -6,6 +6,7 @@ import '../data/bhutan_profile_data.dart';
 import '../data/mock_data.dart';
 import '../models/app_user.dart';
 import '../widgets/verified_badge.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isPremium;
@@ -54,7 +55,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              _buildProfileRow(),
+              _buildProfileRow()
+                  .animate()
+                  .fadeIn(duration: 600.ms)
+                  .slideY(begin: -0.1, duration: 600.ms, curve: Curves.easeOut),
               const SizedBox(height: 20),
               _buildPlanTabs(),
               const SizedBox(height: 20),
@@ -194,11 +198,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Expanded(child: _FeatureCard(icon: Icons.add_circle_rounded,
             title: 'Spotlight', subtitle: 'Stand out',
-            onTap: () => _showPremiumModal('Spotlight'))),
+            onTap: () => _showPremiumModal('Spotlight'))
+              .animate(delay: 200.ms)
+              .fadeIn(duration: 500.ms)
+              .slideX(begin: -0.1, duration: 500.ms)),
           const SizedBox(width: 12),
           Expanded(child: _FeatureCard(icon: Icons.star_rounded,
             title: 'SuperSwipe', subtitle: 'Get noticed',
-            onTap: () => _showPremiumModal('SuperSwipe'))),
+            onTap: () => _showPremiumModal('SuperSwipe'))
+              .animate(delay: 300.ms)
+              .fadeIn(duration: 500.ms)
+              .slideX(begin: 0.1, duration: 500.ms)),
         ],
       ),
     );
