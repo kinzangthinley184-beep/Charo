@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(\\(Get-ChildItem -Path \"C:\\\\Users\\\\acer\\\\Charo\" -Force | Measure-Object\\).Count)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\acer\\\\Charo\" -Force | ForEach-Object { \"$\\($_.Name\\) \\(Mode: $\\($_.Mode\\)\\)\" })",
+      "Bash(flutter create *)",
+      "Bash(flutter emulators *)",
+      "Bash(flutter run *)",
+      "Bash(timeout 40)",
+      "Bash(Get-Content *)",
+      "Bash(flutter analyze *)"
+    ]
+  }
+}
