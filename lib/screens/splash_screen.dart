@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
-import '../painters/dragon_circle_painter.dart';
 import 'login_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -23,7 +22,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   late Animation<double> _backgroundFade;
   late Animation<double> _circleScale;
-  late Animation<double> _dragonProgress;
   late Animation<double> _logoSlide;
   late Animation<double> _logoFade;
   late Animation<double> _taglineFade;
@@ -63,13 +61,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(
         parent: _dragonCtrl,
         curve: const Interval(0.0, 0.15, curve: Curves.elasticOut),
-      ),
-    );
-
-    _dragonProgress = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _dragonCtrl,
-        curve: const Interval(0.12, 1.0, curve: Curves.easeInOut),
       ),
     );
 
@@ -175,7 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Dragon circle art
+                    // Charo logo figures
                     AnimatedBuilder(
                       animation: Listenable.merge(
                           [_dragonCtrl, _pulseCtrl, _circleScale]),
@@ -187,39 +178,9 @@ class _SplashScreenState extends State<SplashScreen>
                           child: SizedBox(
                             width: circleSize,
                             height: circleSize,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                // Dragon painter
-                                CustomPaint(
-                                  size: Size(circleSize, circleSize),
-                                  painter: DragonCirclePainter(
-                                      _dragonProgress.value),
-                                ),
-
-                                // "C" monogram center
-                                AnimatedBuilder(
-                                  animation: _textCtrl,
-                                  builder: (_, _) => Opacity(
-                                    opacity: _logoFade.value * 0.9,
-                                    child: Text(
-                                      'C',
-                                      style: GoogleFonts.playfairDisplay(
-                                        fontSize: circleSize * 0.18,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.gold,
-                                        shadows: [
-                                          Shadow(
-                                            color: AppColors.gold
-                                                .withValues(alpha: 0.6),
-                                            blurRadius: 24,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            child: CustomPaint(
+                              size: Size(circleSize, circleSize),
+                              painter: const _CharoFiguresPainter(),
                             ),
                           ),
                         );
@@ -240,19 +201,12 @@ class _SplashScreenState extends State<SplashScreen>
                           child: Column(
                             children: [
                               Text(
-                                'CHARO',
-                                style: GoogleFonts.playfairDisplay(
-                                  fontSize: 44,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.cream,
-                                  letterSpacing: 10,
-                                  shadows: [
-                                    Shadow(
-                                      color:
-                                          AppColors.saffron.withValues(alpha: 0.4),
-                                      blurRadius: 20,
-                                    ),
-                                  ],
+                                'charo',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 52,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -1,
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -349,6 +303,72 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
+}
+
+class _CharoFiguresPainter extends CustomPainter {
+  const _CharoFiguresPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Origin shifted slightly down so heads don't clip at top
+    canvas.translate(size.width / 2, size.height / 2 + 15);
+
+    final whiteFill = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final whiteAlphaFill = Paint()
+      ..color = Colors.white.withValues(alpha: 0.85)
+      ..style = PaintingStyle.fill;
+
+    final connectStroke = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7
+      ..strokeCap = StrokeCap.round;
+
+    final leftArmStroke = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 14
+      ..strokeCap = StrokeCap.round;
+
+    // ── Right figure (drawn first — behind left) ──────────────────────
+    canvas.drawCircle(const Offset(40, -114), 25, whiteAlphaFill);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(18, -86, 62, 22),
+        const Radius.circular(18),
+      ),
+      whiteAlphaFill,
+    );
+
+    // ── Connecting arm (left figure's right arm wrapping around right) ─
+    final connectPath = Path()
+      ..moveTo(-15, -62)
+      ..cubicTo(5, -74, 35, -70, 55, -56)
+      ..cubicTo(65, -48, 67, -40, 65, -32);
+    canvas.drawPath(connectPath, connectStroke);
+
+    // ── Left figure (in front) ────────────────────────────────────────
+    canvas.drawCircle(const Offset(-40, -110), 28, whiteFill);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(-65, -82, -15, 26),
+        const Radius.circular(22),
+      ),
+      whiteFill,
+    );
+
+    // Left arm extended outward
+    final leftArmPath = Path()
+      ..moveTo(-65, -60)
+      ..quadraticBezierTo(-82, -44, -95, -22);
+    canvas.drawPath(leftArmPath, leftArmStroke);
+  }
+
+  @override
+  bool shouldRepaint(_CharoFiguresPainter _) => false;
 }
 
 class _GoldDividerLine extends StatelessWidget {

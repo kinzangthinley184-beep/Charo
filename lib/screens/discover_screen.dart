@@ -28,7 +28,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   late List<AppUser> _stack;
   int _currentIndex = 0;
   bool _showEmpty = false;
-  bool _isNearbyMode = false;
+  final bool _isNearbyMode = false;
   final _dragNotifier = ValueNotifier<double>(0.0);
 
   @override
@@ -55,19 +55,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     HapticFeedback.mediumImpact();
     widget.onSwipeLeft(_stack[_currentIndex]);
     _advance();
-  }
-
-  void _onSuperLike() {
-    if (_currentIndex >= _stack.length) return;
-    widget.onSwipeRight(_stack[_currentIndex]);
-    _advance();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('⭐ Super Liked ${_stack[_currentIndex - 1].name}!'),
-        backgroundColor: AppColors.superBlue,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   void _advance() {
@@ -132,37 +119,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text('Charo',
-                      style: GoogleFonts.playfairDisplay(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkTextPrimary)),
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppColors.premiumYellow,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text('BT',
-                        style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.darkBg)),
-                  ),
-                ],
-              ),
-              Text('Thimphu, Bhutan',
-                  style: GoogleFonts.poppins(
-                      fontSize: 12, color: AppColors.darkTextSecondary)),
-            ],
-          ),
+          const _CharoInlineLogo(),
           const Spacer(),
           GestureDetector(
             onTap: () => _showFilters(),
@@ -185,29 +142,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Widget _buildModeToggle() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: Container(
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.darkElevated,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            _ToggleTab(
-              label: 'Discover',
-              icon: Icons.explore_rounded,
-              selected: !_isNearbyMode,
-              onTap: () => setState(() => _isNearbyMode = false),
-            ),
-            _ToggleTab(
-              label: 'Nearby',
-              icon: Icons.near_me_rounded,
-              selected: _isNearbyMode,
-              onTap: () => setState(() => _isNearbyMode = true),
-              accentColor: AppColors.nearbyTeal,
-            ),
-          ],
-        ),
+      child: Row(
+        children: [
+          Icon(Icons.auto_awesome_rounded,
+              color: AppColors.saffron, size: 18),
+          const SizedBox(width: 6),
+          Text('Match',
+              style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.saffron)),
+        ],
       ),
     );
   }
@@ -254,25 +199,69 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _ActionButton(
-              icon: Icons.close_rounded,
-              color: AppColors.passGray,
-              size: 56,
-              onTap: _onPass),
-          _ActionButton(
-              icon: Icons.star_rounded,
-              color: AppColors.superBlue,
-              size: 46,
-              onTap: _onSuperLike),
-          _ActionButton(
-              icon: Icons.favorite_rounded,
-              color: AppColors.matchPink,
-              size: 56,
-              onTap: _onLike),
+          _buildNopeButton(),
+          const SizedBox(width: 52),
+          _buildYesButton(),
         ],
       ),
+    );
+  }
+
+  Widget _buildNopeButton() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _onPass,
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1C1C1C),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFCC2200), width: 1.5),
+            ),
+            child: const Icon(Icons.close_rounded,
+                color: Color(0xFFFF3300), size: 28),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text('Nope',
+            style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFFF3300))),
+      ],
+    );
+  }
+
+  Widget _buildYesButton() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _onLike,
+          child: Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D2010),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFF00AA44), width: 1.5),
+            ),
+            child: const Icon(Icons.check_rounded,
+                color: Color(0xFF00DD55), size: 32),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text('Yes!',
+            style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF00DD55))),
+      ],
     );
   }
 
@@ -288,60 +277,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
 // ── Mode toggle tab ───────────────────────────────────────────────────────────
 
-class _ToggleTab extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-  final Color accentColor;
-
-  const _ToggleTab({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-    this.accentColor = AppColors.saffron,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: selected ? accentColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                  size: 15,
-                  color: selected
-                      ? Colors.white
-                      : AppColors.darkTextSecondary),
-              const SizedBox(width: 5),
-              Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.normal,
-                  color: selected
-                      ? Colors.white
-                      : AppColors.darkTextSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ── Nearby view ───────────────────────────────────────────────────────────────
 
@@ -606,8 +541,11 @@ class _SwipeCardState extends State<_SwipeCard>
     flyAnim.addListener(() => setState(() => _drag = flyAnim.value));
     flyCtrl.forward().then((_) {
       flyCtrl.dispose();
-      if (right) widget.onLike();
-      else widget.onPass();
+      if (right) {
+        widget.onLike();
+      } else {
+        widget.onPass();
+      }
     });
   }
 
@@ -944,6 +882,84 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Charo inline logo ─────────────────────────────────────────────────────────
+
+class _CharoInlineLogo extends StatelessWidget {
+  const _CharoInlineLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 36,
+            height: 32,
+            child: CustomPaint(painter: const _CharoTinyFiguresPainter()),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'charo',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: AppColors.saffron,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CharoTinyFiguresPainter extends CustomPainter {
+  const _CharoTinyFiguresPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final white = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final whiteAlpha = Paint()
+      ..color = Colors.white.withValues(alpha: 0.85)
+      ..style = PaintingStyle.fill;
+    final connector = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+
+    // Right figure (behind)
+    canvas.drawCircle(const Offset(22, 6), 4, whiteAlpha);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+          Rect.fromLTRB(18, 11, 27, 26), const Radius.circular(3)),
+      whiteAlpha,
+    );
+
+    // Left figure (in front)
+    canvas.drawCircle(const Offset(13, 5), 4.5, white);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+          Rect.fromLTRB(9, 10, 19, 27), const Radius.circular(3.5)),
+      white,
+    );
+
+    // Connecting arm
+    final path = Path()
+      ..moveTo(19, 15)
+      ..quadraticBezierTo(23, 12, 27, 15);
+    canvas.drawPath(path, connector);
+  }
+
+  @override
+  bool shouldRepaint(_CharoTinyFiguresPainter _) => false;
 }
 
 // ── Filters Sheet ──────────────────────────────────────────────────────────────

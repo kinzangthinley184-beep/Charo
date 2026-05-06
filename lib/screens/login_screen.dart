@@ -69,13 +69,17 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => _loading = false);
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (_, a, _) =>
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (_, _, _) =>
             OtpScreen(phoneNumber: '${_country.dialCode} ${_phoneCtrl.text}'),
-        transitionDuration: const Duration(milliseconds: 450),
         transitionsBuilder: (_, animation, _, child) => SlideTransition(
-          position: Tween(begin: const Offset(1, 0), end: Offset.zero)
-              .animate(
-                  CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          )),
           child: child,
         ),
       ),
@@ -352,37 +356,6 @@ class _LoginCard extends StatelessWidget {
 
             _GradientButton(loading: loading, onTap: onContinue, label: 'Continue'),
 
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Expanded(
-                    child: Divider(
-                        color: AppColors.darkBorder, thickness: 1)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('or sign in with',
-                      style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: AppColors.darkTextSecondary
-                              .withValues(alpha: 0.6))),
-                ),
-                Expanded(
-                    child: Divider(
-                        color: AppColors.darkBorder, thickness: 1)),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                _SocialChip(label: 'Google', emoji: '🔵'),
-                const SizedBox(width: 12),
-                _SocialChip(label: 'Apple', emoji: '🍎'),
-              ],
-            ),
-
             const SizedBox(height: 24),
 
             Text(
@@ -475,35 +448,3 @@ class _GradientButtonState extends State<_GradientButton> {
   }
 }
 
-class _SocialChip extends StatelessWidget {
-  final String label;
-  final String emoji;
-
-  const _SocialChip({required this.label, required this.emoji});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: AppColors.darkElevated,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.darkBorder),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 8),
-            Text(label,
-                style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.darkTextPrimary)),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -17,17 +17,9 @@ class Country {
   });
 }
 
-/// Supported countries — Bhutan (+975) is index 0 and the default.
+/// Bhutan is the only supported country.
 const kCountries = [
-  Country(name: 'Bhutan',         flag: '🇧🇹', dialCode: '+975', maxDigits: 8),
-  Country(name: 'India',          flag: '🇮🇳', dialCode: '+91',  maxDigits: 10),
-  Country(name: 'Nepal',          flag: '🇳🇵', dialCode: '+977', maxDigits: 10),
-  Country(name: 'Bangladesh',     flag: '🇧🇩', dialCode: '+880', maxDigits: 11),
-  Country(name: 'Sri Lanka',      flag: '🇱🇰', dialCode: '+94',  maxDigits: 9),
-  Country(name: 'China',          flag: '🇨🇳', dialCode: '+86',  maxDigits: 11),
-  Country(name: 'United States',  flag: '🇺🇸', dialCode: '+1',   maxDigits: 10),
-  Country(name: 'United Kingdom', flag: '🇬🇧', dialCode: '+44',  maxDigits: 10),
-  Country(name: 'Australia',      flag: '🇦🇺', dialCode: '+61',  maxDigits: 9),
+  Country(name: 'Bhutan', flag: '🇧🇹', dialCode: '+975', maxDigits: 8),
 ];
 
 class PhoneInputField extends StatefulWidget {
@@ -47,23 +39,7 @@ class PhoneInputField extends StatefulWidget {
 }
 
 class _PhoneInputFieldState extends State<PhoneInputField> {
-  Country _selected = kCountries.first;
-
-  void _openCountryPicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _CountryPickerSheet(
-        selected: _selected,
-        onSelect: (c) {
-          setState(() => _selected = c);
-          widget.onCountryChanged?.call(c);
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
+  final Country _selected = kCountries.first;
 
   @override
   Widget build(BuildContext context) {
@@ -82,37 +58,31 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
       ),
       child: Row(
         children: [
-          // Country code selector
-          GestureDetector(
-            onTap: _openCountryPicker,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: AppColors.darkBorder,
-                    width: 1.5,
-                  ),
+          // Country code display (static — Bhutan only)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(
+                  color: AppColors.darkBorder,
+                  width: 1.5,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(_selected.flag, style: const TextStyle(fontSize: 22)),
-                  const SizedBox(width: 6),
-                  Text(
-                    _selected.dialCode,
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkTextPrimary,
-                    ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_selected.flag, style: const TextStyle(fontSize: 22)),
+                const SizedBox(width: 6),
+                Text(
+                  _selected.dialCode,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.darkTextPrimary,
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.keyboard_arrow_down_rounded,
-                      size: 18, color: AppColors.darkTextSecondary),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           // Number input
@@ -152,81 +122,3 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
   }
 }
 
-class _CountryPickerSheet extends StatelessWidget {
-  final Country selected;
-  final ValueChanged<Country> onSelect;
-
-  const _CountryPickerSheet({required this.selected, required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.all(Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.darkBorder,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Text(
-              'Select Country',
-              style: GoogleFonts.playfairDisplay(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppColors.darkTextPrimary,
-              ),
-            ),
-          ),
-          const Divider(height: 1, color: AppColors.darkDivider),
-          // NeverScrollableScrollPhysics because sheet itself handles scrolling
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: kCountries.length,
-            separatorBuilder: (_, _) =>
-                const Divider(height: 1, color: AppColors.darkDivider),
-            itemBuilder: (_, i) {
-              final c = kCountries[i];
-              final isSelected = c.dialCode == selected.dialCode;
-              return ListTile(
-                leading: Text(c.flag, style: const TextStyle(fontSize: 26)),
-                title: Text(
-                  c.name,
-                  style: GoogleFonts.poppins(
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
-                    color: AppColors.darkTextPrimary,
-                  ),
-                ),
-                trailing: Text(
-                  c.dialCode,
-                  style: GoogleFonts.poppins(
-                    color: AppColors.saffron,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () => onSelect(c),
-                tileColor: isSelected
-                    ? AppColors.saffron.withValues(alpha: 0.08)
-                    : null,
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}

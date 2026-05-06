@@ -149,21 +149,38 @@ class _BottomNav extends StatelessWidget {
           height: 64,
           child: Row(
             children: [
-              _NavItem(icon: Icons.person_rounded, label: 'Profile',
-                  selected: currentIndex == 0, onTap: () => onTap(0)),
-              _NavItem(icon: Icons.explore_rounded, label: 'Discover',
-                  selected: currentIndex == 1, onTap: () => onTap(1)),
-              _NavItem(icon: Icons.people_rounded, label: 'People',
-                  selected: currentIndex == 2, onTap: () => onTap(2)),
               _NavItem(
-                icon: Icons.favorite_rounded,
+                icon: Icons.person_outline_rounded,
+                selectedIcon: Icons.person_rounded,
+                label: 'Profile',
+                selected: currentIndex == 0,
+                onTap: () => onTap(0),
+              ),
+              _NavItem(
+                icon: Icons.explore_outlined,
+                selectedIcon: Icons.explore_rounded,
+                label: 'Match',
+                selected: currentIndex == 1,
+                onTap: () => onTap(1),
+              ),
+              _NavItem(
+                icon: Icons.near_me_outlined,
+                selectedIcon: Icons.near_me_rounded,
+                label: 'Around me',
+                selected: currentIndex == 2,
+                onTap: () => onTap(2),
+              ),
+              _NavItem(
+                icon: Icons.favorite_border_rounded,
+                selectedIcon: Icons.favorite_rounded,
                 label: 'Liked You',
                 selected: currentIndex == 3,
                 badge: likedYouCount,
                 onTap: () => onTap(3),
               ),
               _NavItem(
-                icon: Icons.chat_bubble_rounded,
+                icon: Icons.chat_bubble_outline_rounded,
+                selectedIcon: Icons.chat_bubble_rounded,
                 label: 'Chats',
                 selected: currentIndex == 4,
                 badge: unreadMessages,
@@ -179,6 +196,7 @@ class _BottomNav extends StatelessWidget {
 
 class _NavItem extends StatelessWidget {
   final IconData icon;
+  final IconData selectedIcon;
   final String label;
   final bool selected;
   final int badge;
@@ -186,6 +204,7 @@ class _NavItem extends StatelessWidget {
 
   const _NavItem({
     required this.icon,
+    required this.selectedIcon,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -194,7 +213,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.darkTextPrimary : AppColors.navUnselected;
+    final color = selected ? AppColors.saffron : AppColors.darkTextSecondary;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -205,7 +224,7 @@ class _NavItem extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, color: color, size: 26),
+                Icon(selected ? selectedIcon : icon, color: color, size: 26),
                 if (badge > 0)
                   Positioned(
                     top: -4,
