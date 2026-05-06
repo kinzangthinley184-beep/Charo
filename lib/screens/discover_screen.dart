@@ -119,7 +119,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          const _CharoInlineLogo(),
+          Image.asset(
+            'assets/images/charo_logo.png',
+            height: 32,
+            fit: BoxFit.contain,
+            color: Colors.white,
+            colorBlendMode: BlendMode.srcIn,
+          ),
           const Spacer(),
           GestureDetector(
             onTap: () => _showFilters(),
@@ -882,84 +888,6 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Charo inline logo ─────────────────────────────────────────────────────────
-
-class _CharoInlineLogo extends StatelessWidget {
-  const _CharoInlineLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 32,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 36,
-            height: 32,
-            child: CustomPaint(painter: const _CharoTinyFiguresPainter()),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            'charo',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: AppColors.saffron,
-              height: 1.0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CharoTinyFiguresPainter extends CustomPainter {
-  const _CharoTinyFiguresPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final white = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final whiteAlpha = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
-      ..style = PaintingStyle.fill;
-    final connector = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    // Right figure (behind)
-    canvas.drawCircle(const Offset(22, 6), 4, whiteAlpha);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-          Rect.fromLTRB(18, 11, 27, 26), const Radius.circular(3)),
-      whiteAlpha,
-    );
-
-    // Left figure (in front)
-    canvas.drawCircle(const Offset(13, 5), 4.5, white);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-          Rect.fromLTRB(9, 10, 19, 27), const Radius.circular(3.5)),
-      white,
-    );
-
-    // Connecting arm
-    final path = Path()
-      ..moveTo(19, 15)
-      ..quadraticBezierTo(23, 12, 27, 15);
-    canvas.drawPath(path, connector);
-  }
-
-  @override
-  bool shouldRepaint(_CharoTinyFiguresPainter _) => false;
 }
 
 // ── Filters Sheet ──────────────────────────────────────────────────────────────

@@ -1,5 +1,4 @@
-﻿import 'dart:math' as math;
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
@@ -166,22 +165,20 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Charo logo figures
+                    // Charo logo image
                     AnimatedBuilder(
                       animation: Listenable.merge(
                           [_dragonCtrl, _pulseCtrl, _circleScale]),
                       builder: (_, _) {
-                        final circleSize =
-                            math.min(size.width * 0.65, size.height * 0.48);
                         return Transform.scale(
                           scale: _circleScale.value * _pulse.value,
-                          child: SizedBox(
-                            width: circleSize,
-                            height: circleSize,
-                            child: CustomPaint(
-                              size: Size(circleSize, circleSize),
-                              painter: const _CharoFiguresPainter(),
-                            ),
+                          child: Image.asset(
+                            'assets/images/charo_logo.png',
+                            width: 200,
+                            height: 200,
+                            fit: BoxFit.contain,
+                            color: Colors.white,
+                            colorBlendMode: BlendMode.srcIn,
                           ),
                         );
                       },
@@ -303,72 +300,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
-}
-
-class _CharoFiguresPainter extends CustomPainter {
-  const _CharoFiguresPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Origin shifted slightly down so heads don't clip at top
-    canvas.translate(size.width / 2, size.height / 2 + 15);
-
-    final whiteFill = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final whiteAlphaFill = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
-      ..style = PaintingStyle.fill;
-
-    final connectStroke = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 7
-      ..strokeCap = StrokeCap.round;
-
-    final leftArmStroke = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 14
-      ..strokeCap = StrokeCap.round;
-
-    // ── Right figure (drawn first — behind left) ──────────────────────
-    canvas.drawCircle(const Offset(40, -114), 25, whiteAlphaFill);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTRB(18, -86, 62, 22),
-        const Radius.circular(18),
-      ),
-      whiteAlphaFill,
-    );
-
-    // ── Connecting arm (left figure's right arm wrapping around right) ─
-    final connectPath = Path()
-      ..moveTo(-15, -62)
-      ..cubicTo(5, -74, 35, -70, 55, -56)
-      ..cubicTo(65, -48, 67, -40, 65, -32);
-    canvas.drawPath(connectPath, connectStroke);
-
-    // ── Left figure (in front) ────────────────────────────────────────
-    canvas.drawCircle(const Offset(-40, -110), 28, whiteFill);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTRB(-65, -82, -15, 26),
-        const Radius.circular(22),
-      ),
-      whiteFill,
-    );
-
-    // Left arm extended outward
-    final leftArmPath = Path()
-      ..moveTo(-65, -60)
-      ..quadraticBezierTo(-82, -44, -95, -22);
-    canvas.drawPath(leftArmPath, leftArmStroke);
-  }
-
-  @override
-  bool shouldRepaint(_CharoFiguresPainter _) => false;
 }
 
 class _GoldDividerLine extends StatelessWidget {
