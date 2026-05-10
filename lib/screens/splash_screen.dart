@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
@@ -90,23 +90,23 @@ class _SplashScreenState extends State<SplashScreen>
 
     _startSequence();
   }
-
-  Future<void> _startSequence() async {
+Future<void> _startSequence() async {
     await _backgroundCtrl.forward();
     await Future.delayed(const Duration(milliseconds: 100));
     _dragonCtrl.forward();
     await Future.delayed(const Duration(milliseconds: 1600));
     _textCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 1400));
+    await Future.delayed(const Duration(milliseconds: 2000));
     _navigateToLogin();
   }
+ 
 
   void _navigateToLogin() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, _, _) => const LoginScreen(),
-        transitionDuration: const Duration(milliseconds: 600),
+        transitionDuration: const Duration(milliseconds: 800),
         transitionsBuilder: (_, animation, _, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -135,7 +135,6 @@ class _SplashScreenState extends State<SplashScreen>
           decoration: const BoxDecoration(gradient: AppColors.splashGradient),
           child: Stack(
             children: [
-              // Subtle radial glow at the very top
               Positioned(
                 top: -size.height * 0.1,
                 left: size.width * 0.1,
@@ -157,163 +156,71 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
               ),
-
-              // Main content
               Center(
                 child: SingleChildScrollView(
                   physics: const NeverScrollableScrollPhysics(),
                   child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Charo logo image
-                    AnimatedBuilder(
-                      animation: Listenable.merge(
-                          [_dragonCtrl, _pulseCtrl, _circleScale]),
-                      builder: (_, _) {
-                        return Transform.scale(
-                          scale: _circleScale.value * _pulse.value,
-                          child: Image.asset(
-                            'assets/images/charo_logo.png',
-                            width: 200,
-                            height: 200,
-                            fit: BoxFit.contain,
-                            color: Colors.white,
-                            colorBlendMode: BlendMode.srcIn,
-                          ),
-                        );
-                      },
-                    ).animate()
-                      .fadeIn(duration: 800.ms, curve: Curves.easeOut)
-                      .scale(begin: const Offset(0.8, 0.8), duration: 800.ms, curve: Curves.easeOut),
-
-                    SizedBox(height: size.height * 0.04),
-
-                    // App name
-                    AnimatedBuilder(
-                      animation: _textCtrl,
-                      builder: (_, _) => Transform.translate(
-                        offset: Offset(0, _logoSlide.value),
-                        child: Opacity(
-                          opacity: _logoFade.value,
-                          child: Column(
-                            children: [
-                              Text(
-                                'charo',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 52,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  letterSpacing: -1,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-
-                              // Gold divider line with diamonds
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _GoldDividerLine(),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    width: 5,
-                                    height: 5,
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.gold,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _GoldDividerLine(),
-                                ],
-                              ),
-                            ],
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedBuilder(
+                        animation: Listenable.merge(
+                            [_dragonCtrl, _pulseCtrl, _circleScale]),
+                        builder: (_, _) {
+                          return Transform.scale(
+                            scale: _circleScale.value * _pulse.value,
+                            child: Image.asset(
+                              'assets/images/charo_logo.png',
+                              width: 200,
+                              height: 200,
+                              fit: BoxFit.contain,
+                              color: Colors.white,
+                              colorBlendMode: BlendMode.srcIn,
+                            ),
+                          );
+                        },
+                      ).animate()
+                        .fadeIn(duration: 800.ms, curve: Curves.easeOut)
+                        .scale(begin: const Offset(0.8, 0.8), duration: 800.ms, curve: Curves.easeOut),
+                      SizedBox(height: size.height * 0.04),
+                      AnimatedBuilder(
+                        animation: _textCtrl,
+                        builder: (_, _) => Transform.translate(
+                          offset: Offset(0, _logoSlide.value),
+                          child: Opacity(
+                            opacity: _logoFade.value,
+                            child: Column(
+                              children: [
+                        
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ).animate(delay: 400.ms)
-                      .fadeIn(duration: 600.ms)
-                      .slideY(begin: 0.3, duration: 600.ms, curve: Curves.easeOut),
-
-                    SizedBox(height: size.height * 0.02),
-
-                    // Tagline
-                    AnimatedBuilder(
-                      animation: _textCtrl,
-                      builder: (_, _) => Opacity(
-                        opacity: _taglineFade.value,
-                        child: Column(
-                          children: [
-                            // Dzongkha script
-                            Text(
-                              'འབྲུག་ཡུལ།',
-                              style: TextStyle(
-                                fontSize: 22,
-                                color: AppColors.gold.withValues(alpha: 0.85),
-                                letterSpacing: 2,
-                                height: 1.4,
-                              ),
+                      ).animate(delay: 400.ms)
+                        .fadeIn(duration: 600.ms)
+                        .slideY(begin: 0.3, duration: 600.ms, curve: Curves.easeOut),
+                      SizedBox(height: size.height * 0.06),
+                      AnimatedBuilder(
+                        animation: _textCtrl,
+                        builder: (_, _) => Opacity(
+                          opacity: _taglineFade.value,
+                          child: Text(
+                            'Swipe. Match. Chat',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.cream.withValues(alpha: 0.7),
+                              letterSpacing: 2,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Connecting Bhutan',
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                                color: AppColors.cream.withValues(alpha: 0.55),
-                                letterSpacing: 3,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ).animate(delay: 700.ms)
-                      .fadeIn(duration: 600.ms),
-                  ],
-                ),
-                ),
-              ),
-
-              // Bottom branding
-              Positioned(
-                bottom: 40,
-                left: 0,
-                right: 0,
-                child: AnimatedBuilder(
-                  animation: _textCtrl,
-                  builder: (_, _) => Opacity(
-                    opacity: _taglineFade.value * 0.5,
-                    child: Text(
-                      'Made in Bhutan 🇧🇹',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: AppColors.cream.withValues(alpha: 0.4),
-                        letterSpacing: 1.5,
-                      ),
-                    ),
+                      ).animate(delay: 700.ms)
+                        .fadeIn(duration: 600.ms),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GoldDividerLine extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 1,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.gold.withValues(alpha: 0.0),
-            AppColors.gold.withValues(alpha: 0.8),
-          ],
         ),
       ),
     );
