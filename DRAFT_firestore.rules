@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // --- User Validation ---
+    function isValidUser(data) {
+      return data.name is string && data.name.size() >= 2 && data.name.size() <= 50 &&
+             data.age is int && data.age >= 18 && data.age <= 120 &&
+             data.gender is string && data.gender in ['Woman', 'Man', 'Non-binary'] &&
+             (data.get('bio', '') is string && data.get('bio', '').size() <= 500) &&
+             (data.get('imageUrl', '') is string && data.get('imageUrl', '').size() <= 2048) &&
+             (data.get('interests', []) is list && data.get('interests', []).size() <= 20);
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.name != null; // Basic discovery
+      allow create: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().createdAt == request.time &&
+                    incoming().updatedAt == request.time;
+      allow update: if isOwner(userId) && isValidUser(incoming()) &&
+                    incoming().createdAt == existing().createdAt &&
+                    incoming().updatedAt == request.time &&
+                    incoming().diff(existing()).affectedKeys().hasOnly([
+                      'name', 'age', 'gender', 'bio', 'interests', 'imageUrl', 
+                      'location', 'zodiacSign', 'bhutaneseZodiac', 'occupation', 
+                      'education', 'height', 'religion', 'ethnicity', 'languages', 
+                      'hometown', 'latitude', 'longitude', 'drinkingHabit', 
+                      'smokingHabit', 'lookingFor', 'updatedAt'
+                    ]);
+    }
+
+    // --- Swipe Validation ---
+    function isValidSwipe(data) {
+      return data.fromUserId == request.auth.uid &&
+             isValidId(data.toUserId) &&
+             data.type in ['like', 'nope', 'superlike'];
+    }
+
+    match /swipes/{swipeId} {
+      allow read: if isSignedIn() && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+      allow create: if isSignedIn() && isValidSwipe(incoming()) && incoming().createdAt == request.time;
+      // No updates or deletes for swipes
+    }
+
+    // --- Match Validation ---
+    match /matches/{matchId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.userIds;
+      // Matches are typically created by cloud functions or transactionally, 
+      // but for this demo let's allow read/write if member.
+      
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.userIds;
+        allow create: if isSignedIn() && 
+                      request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.userIds &&
+                      incoming().senderId == request.auth.uid &&
+                      incoming().text is string && incoming().text.size() <= 2000 &&
+                      incoming().createdAt == request.time;
+      }
+    }
+  }
+}

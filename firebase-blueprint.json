@@ -1,0 +1,91 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account and profile information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "age": { "type": "integer" },
+        "gender": { "type": "string" },
+        "bio": { "type": "string" },
+        "interests": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string" },
+        "photos": { "type": "array", "items": { "type": "string" } },
+        "location": { "type": "string" },
+        "zodiacSign": { "type": "string" },
+        "bhutaneseZodiac": { "type": "string" },
+        "occupation": { "type": "string" },
+        "education": { "type": "string" },
+        "height": { "type": "string" },
+        "religion": { "type": "string" },
+        "ethnicity": { "type": "string" },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "hometown": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "drinkingHabit": { "type": "string" },
+        "smokingHabit": { "type": "string" },
+        "lookingFor": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "profileCompletion": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "age", "gender"]
+    },
+    "Swipe": {
+      "title": "Swipe Action",
+      "description": "A swipe action recorded between two users",
+      "type": "object",
+      "properties": {
+        "fromUserId": { "type": "string" },
+        "toUserId": { "type": "string" },
+        "type": { "type": "string", "enum": ["like", "nope", "superlike"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromUserId", "toUserId", "type", "createdAt"]
+    },
+    "Match": {
+      "title": "User Match",
+      "description": "A match between two users who liked each other",
+      "type": "object",
+      "properties": {
+        "userIds": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastMessage": { "type": "string" },
+        "lastMessageAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userIds", "createdAt"]
+    },
+    "Message": {
+      "title": "Chat Message",
+      "description": "A message sent within a match",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "text", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "swipes/{swipeId}": {
+      "schema": "Swipe",
+      "description": "Swipe history"
+    },
+    "matches/{matchId}": {
+      "schema": "Match",
+      "description": "Matches between users"
+    },
+    "matches/{matchId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Chat messages between matched users"
+    }
+  }
+}

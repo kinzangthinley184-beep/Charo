@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-app-bg: #000000;
+  --color-card-bg: #0A0A0A;
+  --color-primary: #FFFFFF;
+  --color-secondary: #141414;
+  --color-grey-text: #A1A1AA;
+  --color-online: #FFFFFF;
+  --color-chat-me: #27272A;
+  --color-chat-them: #09090B;
+}
+
+@layer base {
+  body {
+    @apply bg-app-bg text-white font-sans antialiased;
+  }
+}
+
+.pill-shadow {
+  box-shadow: 0 4px 20px -5px rgba(255, 255, 255, 0.1);
+}
+
+.shadow-glow {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.glass-morphism {
+  @apply bg-black/40 backdrop-blur-xl border border-white/10;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

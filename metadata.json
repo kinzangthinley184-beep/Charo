@@ -1,0 +1,6 @@
+{
+  "name": "Charo",
+  "description": "A premium Bhutanese dating experience focused on meaningful connections and local culture.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": []
+}
