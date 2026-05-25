@@ -1,3 +1,4 @@
+import 'dart:math' show sin, cos, sqrt, atan2;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -75,6 +76,18 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     context.read<AppState>().swipeLeft(user);
     widget.onSwipeLeft?.call(user);
     setState(() => _currentIndex++);
+  }
+
+  double _haversineKm(double lat1, double lon1, double lat2, double lon2) {
+    const r = 6371.0;
+    final phi1 = lat1 * 3.141592653589793 / 180;
+    final phi2 = lat2 * 3.141592653589793 / 180;
+    final dPhi = (lat2 - lat1) * 3.141592653589793 / 180;
+    final dLam = (lon2 - lon1) * 3.141592653589793 / 180;
+    final a = sin(dPhi / 2) * sin(dPhi / 2) +
+        cos(phi1) * cos(phi2) * sin(dLam / 2) * sin(dLam / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return r * c;
   }
 
   void _onNearbyTap(AppUser user) {
@@ -202,7 +215,21 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Widget _buildProximity(AppState appState) {
-    final users = appState.allUsers;
+    final myLat = appState.currentLat;
+    final myLng = appState.currentLng;
+    var users = appState.allUsers
+        .where((u) => u.id != appState.currentUser?.id)
+        .toList();
+    if (myLat != null && myLng != null) {
+      users = users
+          .where((u) => u.latitude != null && u.longitude != null)
+          .toList();
+      users.sort((a, b) {
+        final da = _haversineKm(myLat, myLng, a.latitude!, a.longitude!);
+        final db = _haversineKm(myLat, myLng, b.latitude!, b.longitude!);
+        return da.compareTo(db);
+      });
+    }
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -212,10 +239,19 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         childAspectRatio: 3 / 4,
       ),
       itemCount: users.length,
-      itemBuilder: (_, i) => _ProximityCard(
-        user: users[i],
-        onTap: () => _onNearbyTap(users[i]),
-      ),
+      itemBuilder: (_, i) {
+        final u = users[i];
+        String distLabel = '';
+        if (myLat != null && myLng != null && u.latitude != null && u.longitude != null) {
+          final km = _haversineKm(myLat, myLng, u.latitude!, u.longitude!);
+          distLabel = km < 1 ? '< 1 km' : '${km.round()} km';
+        }
+        return _ProximityCard(
+          user: u,
+          distanceLabel: distLabel,
+          onTap: () => _onNearbyTap(u),
+        );
+      },
     );
   }
 }
@@ -224,11 +260,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
 class _ProximityCard extends StatelessWidget {
   final AppUser user;
+  final String distanceLabel;
   final VoidCallback onTap;
 
-  const _ProximityCard({required this.user, required this.onTap});
-
-  int get _matchPct => 70 + user.id.hashCode.abs() % 28;
+  const _ProximityCard({
+    required this.user,
+    required this.distanceLabel,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -262,29 +301,30 @@ class _ProximityCard extends StatelessWidget {
                 ),
               ),
             ),
-            // Match badge
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.surface2.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: AppColors.borderThin, width: 0.5),
-                ),
-                child: Text(
-                  '$_matchPct%',
-                  style: GoogleFonts.outfit(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+            // Distance badge
+            if (distanceLabel.isNotEmpty)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15), width: 0.5),
+                  ),
+                  child: Text(
+                    distanceLabel,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
             // Name + location
             Positioned(
               bottom: 14,

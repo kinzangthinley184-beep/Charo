@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users — read by any authenticated user, write only own doc
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == uid;
+
+      // Likes & passes subcollections — own doc only
+      match /likes/{targetId} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /passes/{targetId} {
+        allow read, write: if request.auth.uid == uid;
+      }
+
+      // Blocks subcollection — own doc only
+      match /blocks/{targetId} {
+        allow read, write: if request.auth.uid == uid;
+      }
+    }
+
+    // Matches — readable and writable by participants only
+    match /matches/{matchId} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid in resource.data.participants;
+
+      // Messages subcollection — participants only
+      match /messages/{msgId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // Chats — authenticated users only
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null;
+
+      match /messages/{msgId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // Reports — any authenticated user can create, no reads
+    match /reports/{id} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false;
+    }
+  }
+}

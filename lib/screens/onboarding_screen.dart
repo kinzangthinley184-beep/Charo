@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../core/app_colors.dart';
 import '../state/app_state.dart';
 
 const _kInterests = [
@@ -82,18 +81,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (mounted) _snack('Something went wrong. Try again.');
       setState(() => _saving = false);
     }
-    // AppState.needsOnboarding becomes false → main.dart shows HomeScreen
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg), backgroundColor: AppColors.matchPink));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: GoogleFonts.raleway(color: Colors.white, fontSize: 13)),
+        backgroundColor: const Color(0xFF1A1A1A),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: const Color(0xFF0A0A0A),
       body: SafeArea(
         child: Column(
           children: [
@@ -128,17 +130,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildProgressBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
       child: Row(
         children: List.generate(3, (i) {
           return Expanded(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              height: 4,
+              height: 1.5,
               margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
               decoration: BoxDecoration(
-                color: i <= _page ? AppColors.saffron : AppColors.darkBorder,
-                borderRadius: BorderRadius.circular(2),
+                color: i <= _page ? Colors.white : const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(1),
               ),
             ),
           );
@@ -149,7 +151,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildFooter() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
       child: Row(
         children: [
           if (_page > 0)
@@ -158,40 +160,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut),
               child: Container(
-                width: 52,
-                height: 52,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.darkElevated,
+                  color: Colors.transparent,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.darkBorder),
+                  border: Border.all(color: const Color(0xFF222222), width: 0.5),
                 ),
                 child: const Icon(Icons.arrow_back_rounded,
-                    color: AppColors.darkTextPrimary),
+                    color: Color(0xFF555555), size: 18),
               ),
             ),
           const Spacer(),
-          GestureDetector(
-            onTap: _saving ? null : _next,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
-              decoration: BoxDecoration(
-                gradient: AppColors.buttonGradient,
-                borderRadius: BorderRadius.circular(28),
+          SizedBox(
+            height: 48,
+            child: TextButton(
+              onPressed: _saving ? null : _next,
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: _saving
                   ? const SizedBox(
-                      width: 22,
-                      height: 22,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5),
+                          color: Colors.black, strokeWidth: 1.5),
                     )
                   : Text(
-                      _page == 2 ? 'Start Exploring' : 'Continue',
-                      style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
+                      _page == 2 ? 'START EXPLORING' : 'CONTINUE',
+                      style: GoogleFonts.raleway(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2,
+                          color: Colors.black),
                     ),
             ),
           ),
@@ -223,17 +229,24 @@ class _StepBasicInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tell us about yourself',
-              style: GoogleFonts.playfairDisplay(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.darkTextPrimary)),
+          Text('STEP 1 OF 3',
+              style: GoogleFonts.raleway(
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: const Color(0xFF333333))),
+          const SizedBox(height: 14),
+          Text('Tell us about\nyourself.',
+              style: GoogleFonts.cormorantGaramond(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                  height: 1.25)),
           const SizedBox(height: 8),
           Text('This is how you\'ll appear to others.',
-              style: GoogleFonts.poppins(
-                  fontSize: 14, color: AppColors.darkTextSecondary)),
-          const SizedBox(height: 32),
-          _label('Your name'),
+              style: GoogleFonts.raleway(
+                  fontSize: 12, color: const Color(0xFF444444))),
+          const SizedBox(height: 36),
+          _label('YOUR NAME'),
           const SizedBox(height: 8),
           _field(
             controller: nameCtrl,
@@ -242,7 +255,7 @@ class _StepBasicInfo extends StatelessWidget {
             capitalization: TextCapitalization.words,
           ),
           const SizedBox(height: 20),
-          _label('Age'),
+          _label('AGE'),
           const SizedBox(height: 8),
           _field(
             controller: ageCtrl,
@@ -251,7 +264,7 @@ class _StepBasicInfo extends StatelessWidget {
             formatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 20),
-          _label('Gender'),
+          _label('GENDER'),
           const SizedBox(height: 8),
           Row(
             children: ['Man', 'Woman', 'Non-binary'].map((g) {
@@ -265,21 +278,21 @@ class _StepBasicInfo extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
                       color: sel
-                          ? AppColors.saffron.withValues(alpha: 0.15)
-                          : AppColors.darkElevated,
-                      borderRadius: BorderRadius.circular(12),
+                          ? const Color(0xFF141414)
+                          : const Color(0xFF111111),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                          color: sel ? AppColors.saffron : AppColors.darkBorder,
-                          width: sel ? 1.5 : 1),
+                          color: sel ? Colors.white : const Color(0xFF2A2A2A),
+                          width: 0.5),
                     ),
                     child: Center(
                       child: Text(g,
-                          style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                          style: GoogleFonts.raleway(
+                              fontSize: 12,
+                              fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
                               color: sel
-                                  ? AppColors.saffron
-                                  : AppColors.darkTextSecondary)),
+                                  ? Colors.white
+                                  : const Color(0xFF444444))),
                     ),
                   ),
                 ),
@@ -292,10 +305,11 @@ class _StepBasicInfo extends StatelessWidget {
   }
 
   Widget _label(String text) => Text(text,
-      style: GoogleFonts.poppins(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextSecondary));
+      style: GoogleFonts.raleway(
+          fontSize: 9,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 2,
+          color: const Color(0xFF444444)));
 
   Widget _field({
     required TextEditingController controller,
@@ -304,27 +318,32 @@ class _StepBasicInfo extends StatelessWidget {
     TextCapitalization capitalization = TextCapitalization.none,
     List<TextInputFormatter>? formatters,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.darkElevated,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.darkBorder),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: inputType,
-        textCapitalization: capitalization,
-        inputFormatters: formatters,
-        style: GoogleFonts.poppins(
-            fontSize: 15, color: AppColors.darkTextPrimary),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.poppins(
-              fontSize: 15, color: AppColors.darkTextSecondary),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return TextField(
+      controller: controller,
+      keyboardType: inputType,
+      textCapitalization: capitalization,
+      inputFormatters: formatters,
+      style: GoogleFonts.raleway(fontSize: 14, color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.raleway(
+            fontSize: 14, color: const Color(0xFF333333)),
+        filled: true,
+        fillColor: const Color(0xFF111111),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF2A2A2A), width: 0.5),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF2A2A2A), width: 0.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.white, width: 0.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -343,47 +362,61 @@ class _StepBio extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Write a short bio',
-              style: GoogleFonts.playfairDisplay(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.darkTextPrimary)),
+          Text('STEP 2 OF 3',
+              style: GoogleFonts.raleway(
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: const Color(0xFF333333))),
+          const SizedBox(height: 14),
+          Text('Write a\nshort bio.',
+              style: GoogleFonts.cormorantGaramond(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                  height: 1.25)),
           const SizedBox(height: 8),
           Text('Let people know what makes you unique.',
-              style: GoogleFonts.poppins(
-                  fontSize: 14, color: AppColors.darkTextSecondary)),
-          const SizedBox(height: 32),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.darkElevated,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.darkBorder),
-            ),
-            child: TextField(
-              controller: bioCtrl,
-              maxLines: 6,
-              maxLength: 300,
-              textCapitalization: TextCapitalization.sentences,
-              style: GoogleFonts.poppins(
-                  fontSize: 15, color: AppColors.darkTextPrimary),
-              decoration: InputDecoration(
-                hintText:
-                    'e.g. I love hiking the trails around Thimphu and exploring Bhutan\'s hidden monasteries...',
-                hintStyle: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: AppColors.darkTextSecondary,
-                    height: 1.5),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(16),
-                counterStyle: GoogleFonts.poppins(
-                    fontSize: 11, color: AppColors.darkTextSecondary),
+              style: GoogleFonts.raleway(
+                  fontSize: 12, color: const Color(0xFF444444))),
+          const SizedBox(height: 36),
+          TextField(
+            controller: bioCtrl,
+            maxLines: 6,
+            maxLength: 300,
+            textCapitalization: TextCapitalization.sentences,
+            style: GoogleFonts.raleway(fontSize: 14, color: Colors.white),
+            decoration: InputDecoration(
+              hintText:
+                  'e.g. I love hiking the trails around Thimphu and exploring Bhutan\'s hidden monasteries...',
+              hintStyle: GoogleFonts.raleway(
+                  fontSize: 13,
+                  color: const Color(0xFF333333),
+                  height: 1.6),
+              filled: true,
+              fillColor: const Color(0xFF111111),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide:
+                    const BorderSide(color: Color(0xFF2A2A2A), width: 0.5),
               ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide:
+                    const BorderSide(color: Color(0xFF2A2A2A), width: 0.5),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.white, width: 0.5),
+              ),
+              contentPadding: const EdgeInsets.all(16),
+              counterStyle: GoogleFonts.raleway(
+                  fontSize: 11, color: const Color(0xFF333333)),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text('You can skip this and add it later from your profile.',
-              style: GoogleFonts.poppins(
-                  fontSize: 12, color: AppColors.darkTextSecondary)),
+              style: GoogleFonts.raleway(
+                  fontSize: 11, color: const Color(0xFF2A2A2A))),
         ],
       ),
     );
@@ -405,19 +438,26 @@ class _StepInterests extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Your interests',
-              style: GoogleFonts.playfairDisplay(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.darkTextPrimary)),
+          Text('STEP 3 OF 3',
+              style: GoogleFonts.raleway(
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: const Color(0xFF333333))),
+          const SizedBox(height: 14),
+          Text('Your\ninterests.',
+              style: GoogleFonts.cormorantGaramond(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                  height: 1.25)),
           const SizedBox(height: 8),
           Text('Pick up to 5 things you enjoy.',
-              style: GoogleFonts.poppins(
-                  fontSize: 14, color: AppColors.darkTextSecondary)),
-          const SizedBox(height: 24),
+              style: GoogleFonts.raleway(
+                  fontSize: 12, color: const Color(0xFF444444))),
+          const SizedBox(height: 28),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: _kInterests.map((interest) {
               final sel = selected.contains(interest);
               final canAdd = selected.length < 5;
@@ -431,24 +471,23 @@ class _StepInterests extends StatelessWidget {
                       horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: sel
-                        ? AppColors.saffron.withValues(alpha: 0.15)
-                        : AppColors.darkElevated,
-                    borderRadius: BorderRadius.circular(24),
+                        ? const Color(0xFF141414)
+                        : const Color(0xFF111111),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: sel ? AppColors.saffron : AppColors.darkBorder,
-                        width: sel ? 1.5 : 1),
+                        color: sel ? Colors.white : const Color(0xFF2A2A2A),
+                        width: 0.5),
                   ),
                   child: Text(
                     interest,
-                    style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight:
-                            sel ? FontWeight.w700 : FontWeight.w500,
+                    style: GoogleFonts.raleway(
+                        fontSize: 12,
+                        fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
                         color: sel
-                            ? AppColors.saffron
-                            : (canAdd || sel
-                                ? AppColors.darkTextPrimary
-                                : AppColors.darkTextSecondary)),
+                            ? Colors.white
+                            : (canAdd
+                                ? const Color(0xFF444444)
+                                : const Color(0xFF444444))),
                   ),
                 ),
               );
@@ -456,8 +495,8 @@ class _StepInterests extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text('${selected.length}/5 selected',
-              style: GoogleFonts.poppins(
-                  fontSize: 12, color: AppColors.darkTextSecondary)),
+              style: GoogleFonts.raleway(
+                  fontSize: 11, color: const Color(0xFF333333))),
         ],
       ),
     );

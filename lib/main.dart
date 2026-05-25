@@ -12,6 +12,8 @@ import 'state/app_state.dart';
 import 'firebase_options.dart';
 import 'utils/seed_users.dart' show deleteSeedUsers;
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -47,6 +49,7 @@ class CharoApp extends StatelessWidget {
         title: 'Charo',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
+        navigatorKey: navigatorKey,
         scaffoldMessengerKey: NotificationService.messengerKey,
         home: Consumer<AppState>(
           builder: (_, appState, _) {

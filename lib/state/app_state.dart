@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 import '../models/app_user.dart';
 import '../services/notification_service.dart';
+import '../main.dart' show navigatorKey;
 
 class AppState extends ChangeNotifier {
   final Set<String> likedIds = {};
@@ -21,6 +23,9 @@ class AppState extends ChangeNotifier {
   bool _loadingUsers = false;
   AppUser? _currentUser;
   bool _profileLoaded = false;
+  double? _currentLat;
+  double? _currentLng;
+  Set<String> _blockedIds = {};
 
   StreamSubscription? _matchesSub;
   final Map<String, StreamSubscription> _messageSubs = {};
@@ -32,6 +37,9 @@ class AppState extends ChangeNotifier {
   bool get loadingUsers => _loadingUsers;
   AppUser? get currentUser => _currentUser;
   bool get isLoadingProfile => _isAuthenticated && !_profileLoaded;
+  double? get currentLat => _currentLat;
+  double? get currentLng => _currentLng;
+  Set<String> get blockedIds => _blockedIds;
 
   bool get needsOnboarding {
     if (!_profileLoaded || _currentUser == null) return false;
@@ -55,7 +63,8 @@ class AppState extends ChangeNotifier {
       await fetchUsersFromFirestore();
       await fetchCurrentUser();
       _subscribeToMatches();
-      NotificationService().init(_userId!);
+      NotificationService().init(_userId!, navigatorKey);
+      fetchCurrentLocation();
     }
   }
 
@@ -73,7 +82,8 @@ class AppState extends ChangeNotifier {
     await fetchUsersFromFirestore();
     await fetchCurrentUser();
     _subscribeToMatches();
-    NotificationService().init(_userId!);
+    NotificationService().init(_userId!, navigatorKey);
+    fetchCurrentLocation();
   }
 
   // ── Swipe persistence ────────────────────────────────────────────────────
@@ -288,15 +298,78 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      if (permission == LocationPermission.deniedForever) return;
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+      );
+      _currentLat = pos.latitude;
+      _currentLng = pos.longitude;
+      if (_userId != null) {
+        await FirebaseFirestore.instance.collection('users').doc(_userId!).update({
+          'latitude': _currentLat,
+          'longitude': _currentLng,
+        });
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Location error: $e');
+    }
+  }
+
+  // Firestore rules needed:
+  // match /users/{uid}/blocks/{targetId} { allow write: if request.auth.uid == uid; }
+  // match /reports/{id} { allow create: if request.auth != null; }
+
+  Future<void> blockUser(String targetUid) async {
+    if (_userId == null) return;
+    _blockedIds.add(targetUid);
+    _allUsers.removeWhere((u) => u.id == targetUid);
+    notifyListeners();
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_userId!)
+        .collection('blocks')
+        .doc(targetUid)
+        .set({'blockedAt': FieldValue.serverTimestamp()});
+  }
+
+  Future<void> reportUser(String targetUid, String reason) async {
+    if (_userId == null) return;
+    await FirebaseFirestore.instance.collection('reports').add({
+      'reportedBy': _userId!,
+      'reportedUser': targetUid,
+      'reason': reason,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<void> fetchUsersFromFirestore() async {
     _loadingUsers = true;
     notifyListeners();
     try {
+      if (_userId != null) {
+        final blocksSnap = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_userId!)
+            .collection('blocks')
+            .get();
+        _blockedIds = blocksSnap.docs.map((d) => d.id).toSet();
+      }
       final snapshot =
           await FirebaseFirestore.instance.collection('users').get();
       _allUsers = snapshot.docs
           .map((doc) => AppUser.fromFirestore(doc.id, doc.data()))
           .toList();
+      _allUsers = _allUsers.where((u) => !_blockedIds.contains(u.id)).toList();
     } catch (e) {
       debugPrint('Error fetching users: $e');
     }

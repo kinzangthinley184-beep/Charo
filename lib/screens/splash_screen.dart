@@ -12,107 +12,99 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  // Background
-  late AnimationController _bgCtrl;
-  late Animation<double> _bgFade;
 
-  // Logo ring glow
-  late AnimationController _glowCtrl;
-  late Animation<double> _glowScale;
-  late Animation<double> _glowOpacity;
+  late AnimationController _ringCtrl;
+  late Animation<double> _ringScale;
+  late Animation<double> _ringFade;
 
-  // Logo pop-in
   late AnimationController _logoCtrl;
-  late Animation<double> _logoScale;
   late Animation<double> _logoFade;
+  late Animation<double> _logoScale;
 
-  // Pulse (idle loop)
+  late AnimationController _textCtrl;
+  late Animation<double> _nameFade;
+  late Animation<double> _nameSpacing;
+  late Animation<double> _taglineFade;
+
   late AnimationController _pulseCtrl;
   late Animation<double> _pulse;
 
-  // Text reveal
-  late AnimationController _textCtrl;
-  late Animation<double> _nameSlide;
-  late Animation<double> _nameFade;
-  late Animation<double> _taglineFade;
-
-  static const _accent = Color(0xFFFF4D67);
-  static const _bg = Color(0xFF0D0D0D);
+  static const _bg = Color(0xFF0A0A0A);
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    _bgCtrl = AnimationController(
+    _ringCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 900),
     );
-    _bgFade = CurvedAnimation(parent: _bgCtrl, curve: Curves.easeOut);
-
-    _glowCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
+    _ringScale = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(parent: _ringCtrl, curve: Curves.easeOut),
     );
-    _glowScale = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeOut),
-    );
-    _glowOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeOut),
+    _ringFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _ringCtrl, curve: Curves.easeOut),
     );
 
     _logoCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _logoScale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut),
-    );
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoCtrl,
-          curve: const Interval(0.0, 0.5, curve: Curves.easeOut)),
+      CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOut),
+    );
+    _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOut),
     );
 
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 2400),
     )..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.97, end: 1.03).animate(
+    _pulse = Tween<double>(begin: 0.98, end: 1.02).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
 
     _textCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _nameSlide = Tween<double>(begin: 24.0, end: 0.0).animate(
-      CurvedAnimation(
-          parent: _textCtrl,
-          curve: const Interval(0.0, 0.7, curve: Curves.easeOut)),
+      duration: const Duration(milliseconds: 1000),
     );
     _nameFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-          parent: _textCtrl,
-          curve: const Interval(0.0, 0.6, curve: Curves.easeOut)),
+        parent: _textCtrl,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+    _nameSpacing = Tween<double>(begin: 4.0, end: 10.0).animate(
+      CurvedAnimation(
+        parent: _textCtrl,
+        curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
+      ),
     );
     _taglineFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-          parent: _textCtrl,
-          curve: const Interval(0.4, 1.0, curve: Curves.easeOut)),
+        parent: _textCtrl,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      ),
     );
 
     _startSequence();
   }
 
   Future<void> _startSequence() async {
-    await _bgCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 80));
-    _glowCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 150));
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    _ringCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
     _logoCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 700));
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
     _textCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 1800));
+    await Future.delayed(const Duration(milliseconds: 2000));
+    if (!mounted) return;
     _navigateToLogin();
   }
 
@@ -120,10 +112,9 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const LoginScreen(),
-        transitionDuration: const Duration(milliseconds: 700),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        pageBuilder: (_, animation, __) => const LoginScreen(),
+        transitionDuration: const Duration(milliseconds: 800),
+        transitionsBuilder: (_, animation, __, child) =>
             FadeTransition(opacity: animation, child: child),
       ),
     );
@@ -131,8 +122,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _bgCtrl.dispose();
-    _glowCtrl.dispose();
+    _ringCtrl.dispose();
     _logoCtrl.dispose();
     _pulseCtrl.dispose();
     _textCtrl.dispose();
@@ -143,110 +133,114 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      body: FadeTransition(
-        opacity: _bgFade,
-        child: Container(
-          color: _bg,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ── Logo + glow ────────────────────────────────────────────
-                AnimatedBuilder(
-                  animation: Listenable.merge(
-                      [_glowCtrl, _logoCtrl, _pulseCtrl]),
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _pulse.value,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Concentric rings + C monogram ──────────────────────────
+            AnimatedBuilder(
+              animation: Listenable.merge([_ringCtrl, _logoCtrl, _pulseCtrl]),
+              builder: (context, _) {
+                return Transform.scale(
+                  scale: _pulse.value,
+                  child: Opacity(
+                    opacity: _ringFade.value,
+                    child: Transform.scale(
+                      scale: _ringScale.value,
                       child: SizedBox(
-                        width: 160,
-                        height: 160,
+                        width: 120,
+                        height: 120,
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            // Soft radial glow behind logo
-                            Transform.scale(
-                              scale: _glowScale.value,
-                              child: Opacity(
-                                opacity: _glowOpacity.value * 0.35,
-                                child: Container(
-                                  width: 160,
-                                  height: 160,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: RadialGradient(
-                                      colors: [_accent, Colors.transparent],
-                                      stops: [0.0, 1.0],
-                                    ),
-                                  ),
+                            // Outer ring
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFF222222),
+                                  width: 0.5,
                                 ),
                               ),
                             ),
-                            // Logo
-                            Transform.scale(
-                              scale: _logoScale.value,
-                              child: Opacity(
-                                opacity: _logoFade.value,
-                                child: Image.asset(
-                                  'assets/images/charo_logo.png',
-                                  width: 96,
-                                  height: 96,
-                                  fit: BoxFit.contain,
-                                  color: _accent,
-                                  colorBlendMode: BlendMode.srcIn,
+                            // Middle ring
+                            Container(
+                              width: 88,
+                              height: 88,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFF333333),
+                                  width: 0.5,
+                                ),
+                              ),
+                            ),
+                            // Inner ring
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFF555555),
+                                  width: 0.5,
+                                ),
+                              ),
+                            ),
+                            // C monogram
+                            Opacity(
+                              opacity: _logoFade.value,
+                              child: Transform.scale(
+                                scale: _logoScale.value,
+                                child: Text(
+                                  'C',
+                                  style: GoogleFonts.cormorantGaramond(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w300, letterSpacing: 2),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 32),
-
-                // ── App name ───────────────────────────────────────────────
-                AnimatedBuilder(
-                  animation: _textCtrl,
-                  builder: (context, child) =>Transform.translate(
-                    offset: Offset(0, _nameSlide.value),
-                    child: Opacity(
-                      opacity: _nameFade.value,
-                      child: Text(
-                        'Charo',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // ── Tagline ────────────────────────────────────────────────
-                AnimatedBuilder(
-                  animation: _textCtrl,
-                  builder: (context, child) =>Opacity(
-                    opacity: _taglineFade.value,
-                    child: Text(
-                      'Swipe. Match. Connect.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF8E8E93),
-                        letterSpacing: 1.8,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                );
+              },
             ),
-          ),
+
+            const SizedBox(height: 48),
+
+            // ── CHARO wordmark ─────────────────────────────────────────
+            AnimatedBuilder(
+              animation: _textCtrl,
+              builder: (context, _) {
+                return Opacity(
+                  opacity: _nameFade.value,
+                  child: Text(
+                    'CHARO',
+                    style: GoogleFonts.raleway(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w300, letterSpacing: _nameSpacing.value),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Tagline ────────────────────────────────────────────────
+            AnimatedBuilder(
+              animation: _textCtrl,
+              builder: (context, _) {
+                return Opacity(
+                  opacity: _taglineFade.value,
+                  child: Text(
+                    'CONNECT · BELONG · LOVE',
+                    style: GoogleFonts.raleway(color: const Color(0xFF333333), fontSize: 9, fontWeight: FontWeight.w400, letterSpacing: 3.0),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

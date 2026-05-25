@@ -1,13 +1,216 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../models/app_user.dart';
+import '../state/app_state.dart';
 import '../widgets/verified_badge.dart';
 
-class UserProfileScreen extends StatelessWidget {
+class UserProfileScreen extends StatefulWidget {
   final AppUser user;
 
   const UserProfileScreen({super.key, required this.user});
+
+  @override
+  State<UserProfileScreen> createState() => _UserProfileScreenState();
+}
+
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  AppUser get user => widget.user;
+
+  void _showBlockReportSheet(BuildContext context, AppUser user) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF111111),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 3,
+              decoration: BoxDecoration(
+                color: const Color(0xFF333333),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                user.name,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'What would you like to do?',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4), fontSize: 13),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _sheetOption(
+              context: context,
+              icon: Icons.block_rounded,
+              label: 'Block ${user.name}',
+              sublabel: "They won't be able to see your profile",
+              color: Colors.white,
+              onTap: () {
+                Navigator.pop(context);
+                _confirmBlock(context, user);
+              },
+            ),
+            _sheetOption(
+              context: context,
+              icon: Icons.flag_outlined,
+              label: 'Report ${user.name}',
+              sublabel: 'Harassment, fake profile, inappropriate content',
+              color: const Color(0xFFFF4444),
+              onTap: () {
+                Navigator.pop(context);
+                _showReportSheet(context, user);
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetOption({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required String sublabel,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: color, size: 22),
+      title: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 14, fontWeight: FontWeight.w500)),
+      subtitle: Text(sublabel,
+          style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3), fontSize: 12)),
+    );
+  }
+
+  void _confirmBlock(BuildContext context, AppUser user) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF111111),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Block ${user.name}?',
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500)),
+        content: Text(
+          "They won't appear in your Discover feed and you won't appear in theirs.",
+          style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 13,
+              height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel',
+                style:
+                    TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await context.read<AppState>().blockUser(user.id);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Block',
+                style: TextStyle(color: Color(0xFFFF4444))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportSheet(BuildContext context, AppUser user) {
+    const reasons = [
+      'Fake profile',
+      'Inappropriate photos',
+      'Harassment or threats',
+      'Spam',
+      'Underage user',
+      'Other',
+    ];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF111111),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text('Report ${user.name}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500)),
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text('Select a reason',
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      fontSize: 13)),
+            ),
+            const SizedBox(height: 12),
+            ...reasons.map((r) => ListTile(
+                  title: Text(r,
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 14)),
+                  trailing: Icon(Icons.chevron_right,
+                      color: Colors.white.withValues(alpha: 0.3), size: 18),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await context.read<AppState>().reportUser(user.id, r);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Report submitted. Thank you.'),
+                          backgroundColor: Color(0xFF1A1A1A),
+                        ),
+                      );
+                    }
+                  },
+                )),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +220,10 @@ class UserProfileScreen extends StatelessWidget {
         children: [
           CustomScrollView(
             slivers: [
-              _AppBar(user: user),
+              _AppBar(
+                user: user,
+                onMoreTap: () => _showBlockReportSheet(context, user),
+              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
@@ -80,7 +286,8 @@ class UserProfileScreen extends StatelessWidget {
 
 class _AppBar extends StatelessWidget {
   final AppUser user;
-  const _AppBar({required this.user});
+  final VoidCallback onMoreTap;
+  const _AppBar({required this.user, required this.onMoreTap});
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +295,12 @@ class _AppBar extends StatelessWidget {
       expandedHeight: 280,
       pinned: true,
       backgroundColor: AppColors.darkBg,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          onPressed: onMoreTap,
+        ),
+      ],
       leading: GestureDetector(
         onTap: () => Navigator.pop(context),
         child: Container(
