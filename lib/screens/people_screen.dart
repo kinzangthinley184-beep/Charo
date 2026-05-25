@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../models/app_user.dart';
-import '../data/mock_data.dart';
+import '../state/app_state.dart';
 
-// Spec distances (km) keyed by user id — sorted order: closest first
 const Map<String, int> _kDistances = {
-  'u1': 65,   // Pema    – Paro
-  'u2': 77,   // Sonam   – Punakha
-  'u4': 145,  // Dechen  – Wangdue
-  'u6': 180,  // Dorji   – Haa
-  'u3': 198,  // Karma   – Bumthang
-  'u7': 220,  // Yangchen – Trongsa
-  'u5': 550,  // Ugyen   – Trashigang
+  'u1': 65,
+  'u2': 77,
+  'u4': 145,
+  'u6': 180,
+  'u3': 198,
+  'u7': 220,
+  'u5': 550,
 };
 
-final List<AppUser> _kSortedUsers = [...kDiscoverUsers]
-  ..sort((a, b) => (_kDistances[a.id] ?? 0).compareTo(_kDistances[b.id] ?? 0));
 
 const List<String> _kFilters = ['All', '5 km', '10 km', '25 km', '50 km', '100 km+'];
 // max distance per filter index; 0 and 5 mean "no limit"
@@ -43,12 +41,18 @@ class PeopleScreen extends StatefulWidget {
 class _PeopleScreenState extends State<PeopleScreen> {
   int _selectedFilter = 0;
 
+  List<AppUser> get _sortedUsers {
+    final users = context.read<AppState>().allUsers;
+    return [...users]
+      ..sort((a, b) =>
+          (_kDistances[a.id] ?? 0).compareTo(_kDistances[b.id] ?? 0));
+  }
+
   List<AppUser> get _filteredUsers {
     final max = _kFilterMax[_selectedFilter];
-    if (max == 0) return _kSortedUsers; // "All" or "100 km+" — no upper limit
-    return _kSortedUsers
-        .where((u) => (_kDistances[u.id] ?? 0) <= max)
-        .toList();
+    final sorted = _sortedUsers;
+    if (max == 0) return sorted;
+    return sorted.where((u) => (_kDistances[u.id] ?? 0) <= max).toList();
   }
 
   @override

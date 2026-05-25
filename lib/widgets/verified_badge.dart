@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../core/app_colors.dart';
 
 class VerifiedBadge extends StatelessWidget {
   final double size;
@@ -12,7 +11,7 @@ class VerifiedBadge extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        color: AppColors.saffron,
+        color: Colors.white,
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -29,7 +28,7 @@ class _TickPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = Colors.black
       ..strokeWidth = size.width * 0.22
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round

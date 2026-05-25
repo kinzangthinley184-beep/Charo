@@ -31,45 +31,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   List<AppUser> _stack = [];
   int _currentIndex = 0;
 
-  static final List<AppUser> _fallback = [
-    AppUser(
-      id: 'test1',
-      name: 'Pema',
-      age: 24,
-      gender: 'Female',
-      bio: "Tiger's Nest hiker",
-      profileImage: 'https://i.pravatar.cc/600?img=47',
-      interests: ['Hiking', 'Buddhism', 'Photography'],
-      location: 'Thimphu',
-      verified: true,
-      distance: '2 km',
-    ),
-    AppUser(
-      id: 'test2',
-      name: 'Dorji',
-      age: 27,
-      gender: 'Male',
-      bio: 'Archery enthusiast and dzongkha poet',
-      profileImage: 'https://i.pravatar.cc/600?img=25',
-      interests: ['Archery', 'Poetry', 'Cooking'],
-      location: 'Paro',
-      verified: false,
-      distance: '8 km',
-    ),
-    AppUser(
-      id: 'test3',
-      name: 'Sonam',
-      age: 22,
-      gender: 'Female',
-      bio: 'Art student, coffee lover, dog mom',
-      profileImage: 'https://i.pravatar.cc/600?img=12',
-      interests: ['Art', 'Coffee', 'Music'],
-      location: 'Punakha',
-      verified: true,
-      distance: '15 km',
-    ),
-  ];
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -86,7 +47,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     final filtered =
         state.allUsers.where((u) => !excluded.contains(u.id)).toList();
     setState(() {
-      _stack = filtered.isNotEmpty ? filtered : List.of(_fallback);
+      _stack = filtered;
       _currentIndex = 0;
     });
   }
@@ -235,16 +196,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         ),
         const SizedBox(height: 24),
         ActionButtons(onPass: _onPass, onLike: _onLike),
-        const SizedBox(height: 28),
+        const SizedBox(height: 100),
       ],
     );
   }
 
   Widget _buildProximity(AppState appState) {
-    final users =
-        appState.allUsers.isNotEmpty ? appState.allUsers : _fallback;
+    final users = appState.allUsers;
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 12,

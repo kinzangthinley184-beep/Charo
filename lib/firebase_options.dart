@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyATvaFRG5GXAleFw92NmOd_3ayCpzi-yh4',
-    appId: '1:416564911767:android:fe5b7598e9fbb8035b13d2',
+    appId: '1:416564911767:android:01ab19f7c95e30eb5b13d2',
     messagingSenderId: '416564911767',
     projectId: 'charo-app-8133e',
     storageBucket: 'charo-app-8133e.firebasestorage.app',

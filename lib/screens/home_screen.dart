@@ -3,12 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../models/app_user.dart';
-import '../data/mock_data.dart';
 import '../state/app_state.dart';
+import '../widgets/bottom_nav.dart';
 import 'profile_screen.dart';
 import 'discover_screen.dart';
-import 'people_screen.dart';
-import 'liked_you_screen.dart';
+import 'matches_screen.dart';
 import 'chats_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -59,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
           user: user,
           onMessage: () {
             Navigator.pop(context);
-            setState(() => _tab = 4);
+            setState(() => _tab = 3);
           },
         ),
       );
@@ -80,18 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onSwipeLeft: (user) => context.read<AppState>().swipeLeft(user),
         isPremium: state.isPremium,
       ),
-      PeopleScreen(
-        matches: state.matches,
-        conversations: state.conversations,
-        onSendMessage: (userId, text) =>
-            context.read<AppState>().sendMessage(userId, text),
-        onReceiveMessage: (userId, text) =>
-            context.read<AppState>().receiveMessage(userId, text),
-      ),
-      LikedYouScreen(
-        isPremium: state.isPremium,
-        onUpgrade: () => context.read<AppState>().upgradePremium(),
-      ),
+      const MatchesScreen(),
       ChatsScreen(
         matches: state.matches,
         conversations: state.conversations,
@@ -103,160 +91,25 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      body: IndexedStack(index: _tab, children: screens),
-      bottomNavigationBar: _BottomNav(
-        currentIndex: _tab,
-        unreadMessages: state.unreadCount,
-        likedYouCount: state.likedYouCount,
-        onTap: (i) => setState(() => _tab = i),
-      ),
-    );
-  }
-}
-
-// ── Bottom Navigation ──────────────────────────────────────────────────────
-
-class _BottomNav extends StatelessWidget {
-  final int currentIndex;
-  final int unreadMessages;
-  final int likedYouCount;
-  final ValueChanged<int> onTap;
-
-  const _BottomNav({
-    required this.currentIndex,
-    required this.unreadMessages,
-    required this.likedYouCount,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.darkSurface,
-        border: Border(top: BorderSide(color: AppColors.darkBorder)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: IndexedStack(
+              index: _tab,
+              children: screens,
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: BottomNav(
+              currentIndex: _tab,
+              onTap: (i) => setState(() => _tab = i),
+            ),
           ),
         ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: [
-              _NavItem(
-                icon: Icons.person_outline_rounded,
-                selectedIcon: Icons.person_rounded,
-                label: 'Profile',
-                selected: currentIndex == 0,
-                onTap: () => onTap(0),
-              ),
-              _NavItem(
-                icon: Icons.explore_outlined,
-                selectedIcon: Icons.explore_rounded,
-                label: 'Match',
-                selected: currentIndex == 1,
-                onTap: () => onTap(1),
-              ),
-              _NavItem(
-                icon: Icons.near_me_outlined,
-                selectedIcon: Icons.near_me_rounded,
-                label: 'Around me',
-                selected: currentIndex == 2,
-                onTap: () => onTap(2),
-              ),
-              _NavItem(
-                icon: Icons.favorite_border_rounded,
-                selectedIcon: Icons.favorite_rounded,
-                label: 'Liked You',
-                selected: currentIndex == 3,
-                badge: likedYouCount,
-                onTap: () => onTap(3),
-              ),
-              _NavItem(
-                icon: Icons.chat_bubble_outline_rounded,
-                selectedIcon: Icons.chat_bubble_rounded,
-                label: 'Chats',
-                selected: currentIndex == 4,
-                badge: unreadMessages,
-                onTap: () => onTap(4),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-  final bool selected;
-  final int badge;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.badge = 0,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? AppColors.saffron : AppColors.darkTextSecondary;
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(selected ? selectedIcon : icon, color: color, size: 26),
-                if (badge > 0)
-                  Positioned(
-                    top: -4,
-                    right: -6,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: AppColors.matchPink,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        badge > 9 ? '9+' : '$badge',
-                        style: const TextStyle(
-                          color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -306,7 +159,10 @@ class _MatchDialog extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _AvatarBubble(user: kCurrentUser),
+                if (context.read<AppState>().currentUser != null)
+                  _AvatarBubble(user: context.read<AppState>().currentUser!)
+                else
+                  const SizedBox(width: 72, height: 72),
                 const SizedBox(width: 8),
                 const Icon(Icons.favorite_rounded, color: Colors.white, size: 28),
                 const SizedBox(width: 8),

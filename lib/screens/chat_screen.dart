@@ -160,20 +160,7 @@ class _ChatHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        _PulsingDot(),
-                        const SizedBox(width: 6),
-                        Text(
-                          'online',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: AppColors.onlineGreen,
-                          ),
-                        ),
-                      ],
-                    ),
+                    _PulsingDot(),
                   ],
                 ),
               ),
@@ -243,10 +230,10 @@ class _PulsingDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 7,
-      height: 7,
+      width: 8,
+      height: 8,
       decoration: const BoxDecoration(
-        color: AppColors.onlineGreen,
+        color: Color(0xFF00C853),
         shape: BoxShape.circle,
       ),
     )

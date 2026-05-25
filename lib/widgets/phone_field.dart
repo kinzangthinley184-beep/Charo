@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/app_colors.dart';
 
 class Country {
   final String name;
@@ -45,28 +44,18 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.darkElevated,
+        color: const Color(0xFF242424),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.saffron.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFF3A3A3A), width: 1.5),
       ),
       child: Row(
         children: [
           // Country code display (static — Bhutan only)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
-                right: BorderSide(
-                  color: AppColors.darkBorder,
-                  width: 1.5,
-                ),
+                right: BorderSide(color: Color(0xFF3A3A3A), width: 1.5),
               ),
             ),
             child: Row(
@@ -79,7 +68,7 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.darkTextPrimary,
+                    color: const Color(0xFFF2F2F2),
                   ),
                 ),
               ],
@@ -98,14 +87,14 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: AppColors.darkTextPrimary,
+                color: const Color(0xFFF2F2F2),
                 letterSpacing: 1.5,
               ),
               decoration: InputDecoration(
                 hintText: 'X' * _selected.maxDigits,
                 hintStyle: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: AppColors.darkTextSecondary.withValues(alpha: 0.5),
+                  color: const Color(0xFF888888),
                   letterSpacing: 1.5,
                 ),
                 border: InputBorder.none,

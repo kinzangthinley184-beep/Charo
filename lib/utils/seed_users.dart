@@ -1,7 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+Future<void> deleteSeedUsers() async {
+  if (FirebaseAuth.instance.currentUser == null) return;
+  try {
+    final col = FirebaseFirestore.instance.collection('users');
+    final snap = await col.get();
+    final batch = FirebaseFirestore.instance.batch();
+    int count = 0;
+    for (final doc in snap.docs) {
+      final img = (doc.data()['profileImage'] as String?) ?? '';
+      if (img.contains('pravatar.cc') || img.contains('i.pravatar')) {
+        batch.delete(doc.reference);
+        count++;
+      }
+    }
+    if (count > 0) {
+      await batch.commit();
+      debugPrint('[SEED] Deleted $count seed users from Firestore.');
+    }
+  } catch (e) {
+    debugPrint('[SEED] Cleanup error: $e');
+  }
+}
+
 Future<void> seedFirestoreIfNeeded() async {
+  if (FirebaseAuth.instance.currentUser == null) return;
+  // Seeding disabled — real users only.
+  return;
+
+  // ignore: dead_code
   final col = FirebaseFirestore.instance.collection('users');
   final snapshot = await col.limit(1).get();
   if (snapshot.docs.isNotEmpty) {

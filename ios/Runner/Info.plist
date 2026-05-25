@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Charo uses your location to show you people nearby.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Charo uses your location to show you people nearby.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Charo needs camera access to let you take profile photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Charo needs photo library access to let you choose profile photos.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

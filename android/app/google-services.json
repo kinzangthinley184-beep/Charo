@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:416564911767:android:01ab19f7c95e30eb5b13d2",
+        "android_client_info": {
+          "package_name": "com.charo.charo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATvaFRG5GXAleFw92NmOd_3ayCpzi-yh4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:416564911767:android:fe5b7598e9fbb8035b13d2",
         "android_client_info": {
           "package_name": "com.example.charo"

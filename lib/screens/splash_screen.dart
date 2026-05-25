@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/app_colors.dart';
 import 'login_screen.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,212 +12,240 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _backgroundCtrl;
-  late AnimationController _dragonCtrl;
-  late AnimationController _textCtrl;
-  late AnimationController _pulseCtrl;
+  // Background
+  late AnimationController _bgCtrl;
+  late Animation<double> _bgFade;
 
-  late Animation<double> _backgroundFade;
-  late Animation<double> _circleScale;
-  late Animation<double> _logoSlide;
+  // Logo ring glow
+  late AnimationController _glowCtrl;
+  late Animation<double> _glowScale;
+  late Animation<double> _glowOpacity;
+
+  // Logo pop-in
+  late AnimationController _logoCtrl;
+  late Animation<double> _logoScale;
   late Animation<double> _logoFade;
-  late Animation<double> _taglineFade;
+
+  // Pulse (idle loop)
+  late AnimationController _pulseCtrl;
   late Animation<double> _pulse;
+
+  // Text reveal
+  late AnimationController _textCtrl;
+  late Animation<double> _nameSlide;
+  late Animation<double> _nameFade;
+  late Animation<double> _taglineFade;
+
+  static const _accent = Color(0xFFFF4D67);
+  static const _bg = Color(0xFF0D0D0D);
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    _backgroundCtrl = AnimationController(
+    _bgCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _bgFade = CurvedAnimation(parent: _bgCtrl, curve: Curves.easeOut);
+
+    _glowCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-
-    _dragonCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
+    _glowScale = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeOut),
+    );
+    _glowOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeOut),
     );
 
-    _textCtrl = AnimationController(
+    _logoCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 600),
+    );
+    _logoScale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut),
+    );
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoCtrl,
+          curve: const Interval(0.0, 0.5, curve: Curves.easeOut)),
     );
 
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
-
-    _backgroundFade = CurvedAnimation(
-      parent: _backgroundCtrl,
-      curve: Curves.easeOut,
+    _pulse = Tween<double>(begin: 0.97, end: 1.03).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
 
-    _circleScale = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _textCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _nameSlide = Tween<double>(begin: 24.0, end: 0.0).animate(
       CurvedAnimation(
-        parent: _dragonCtrl,
-        curve: const Interval(0.0, 0.15, curve: Curves.elasticOut),
-      ),
+          parent: _textCtrl,
+          curve: const Interval(0.0, 0.7, curve: Curves.easeOut)),
     );
-
-    _logoSlide = Tween<double>(begin: 30.0, end: 0.0).animate(
+    _nameFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _textCtrl,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
-      ),
+          parent: _textCtrl,
+          curve: const Interval(0.0, 0.6, curve: Curves.easeOut)),
     );
-
-    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _textCtrl,
-        curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
-      ),
-    );
-
     _taglineFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _textCtrl,
-        curve: const Interval(0.35, 1.0, curve: Curves.easeOut),
-      ),
-    );
-
-    _pulse = Tween<double>(begin: 0.96, end: 1.04).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+          parent: _textCtrl,
+          curve: const Interval(0.4, 1.0, curve: Curves.easeOut)),
     );
 
     _startSequence();
   }
-Future<void> _startSequence() async {
-    await _backgroundCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 100));
-    _dragonCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 1600));
+
+  Future<void> _startSequence() async {
+    await _bgCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 80));
+    _glowCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 150));
+    _logoCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 700));
     _textCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(const Duration(milliseconds: 1800));
     _navigateToLogin();
   }
- 
 
   void _navigateToLogin() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, _, _) => const LoginScreen(),
-        transitionDuration: const Duration(milliseconds: 800),
-        transitionsBuilder: (_, animation, _, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const LoginScreen(),
+        transitionDuration: const Duration(milliseconds: 700),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(opacity: animation, child: child),
       ),
     );
   }
 
   @override
   void dispose() {
-    _backgroundCtrl.dispose();
-    _dragonCtrl.dispose();
-    _textCtrl.dispose();
+    _bgCtrl.dispose();
+    _glowCtrl.dispose();
+    _logoCtrl.dispose();
     _pulseCtrl.dispose();
+    _textCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      backgroundColor: AppColors.saffronDeep,
+      backgroundColor: _bg,
       body: FadeTransition(
-        opacity: _backgroundFade,
+        opacity: _bgFade,
         child: Container(
-          decoration: const BoxDecoration(gradient: AppColors.splashGradient),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -size.height * 0.1,
-                left: size.width * 0.1,
-                right: size.width * 0.1,
-                child: AnimatedBuilder(
-                  animation: _backgroundFade,
-                  builder: (_, _) => Container(
-                    height: size.height * 0.55,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          AppColors.saffron
-                              .withValues(alpha: 0.08 * _backgroundFade.value),
-                          Colors.transparent,
-                        ],
+          color: _bg,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Logo + glow ────────────────────────────────────────────
+                AnimatedBuilder(
+                  animation: Listenable.merge(
+                      [_glowCtrl, _logoCtrl, _pulseCtrl]),
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _pulse.value,
+                      child: SizedBox(
+                        width: 160,
+                        height: 160,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Soft radial glow behind logo
+                            Transform.scale(
+                              scale: _glowScale.value,
+                              child: Opacity(
+                                opacity: _glowOpacity.value * 0.35,
+                                child: Container(
+                                  width: 160,
+                                  height: 160,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [_accent, Colors.transparent],
+                                      stops: [0.0, 1.0],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Logo
+                            Transform.scale(
+                              scale: _logoScale.value,
+                              child: Opacity(
+                                opacity: _logoFade.value,
+                                child: Image.asset(
+                                  'assets/images/charo_logo.png',
+                                  width: 96,
+                                  height: 96,
+                                  fit: BoxFit.contain,
+                                  color: _accent,
+                                  colorBlendMode: BlendMode.srcIn,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 32),
+
+                // ── App name ───────────────────────────────────────────────
+                AnimatedBuilder(
+                  animation: _textCtrl,
+                  builder: (context, child) =>Transform.translate(
+                    offset: Offset(0, _nameSlide.value),
+                    child: Opacity(
+                      opacity: _nameFade.value,
+                      child: Text(
+                        'Charo',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 42,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Center(
-                child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedBuilder(
-                        animation: Listenable.merge(
-                            [_dragonCtrl, _pulseCtrl, _circleScale]),
-                        builder: (_, _) {
-                          return Transform.scale(
-                            scale: _circleScale.value * _pulse.value,
-                            child: Image.asset(
-                              'assets/images/charo_logo.png',
-                              width: 200,
-                              height: 200,
-                              fit: BoxFit.contain,
-                              color: Colors.white,
-                              colorBlendMode: BlendMode.srcIn,
-                            ),
-                          );
-                        },
-                      ).animate()
-                        .fadeIn(duration: 800.ms, curve: Curves.easeOut)
-                        .scale(begin: const Offset(0.8, 0.8), duration: 800.ms, curve: Curves.easeOut),
-                      SizedBox(height: size.height * 0.04),
-                      AnimatedBuilder(
-                        animation: _textCtrl,
-                        builder: (_, _) => Transform.translate(
-                          offset: Offset(0, _logoSlide.value),
-                          child: Opacity(
-                            opacity: _logoFade.value,
-                            child: Column(
-                              children: [
-                        
-                              ],
-                            ),
-                          ),
-                        ),
-                      ).animate(delay: 400.ms)
-                        .fadeIn(duration: 600.ms)
-                        .slideY(begin: 0.3, duration: 600.ms, curve: Curves.easeOut),
-                      SizedBox(height: size.height * 0.06),
-                      AnimatedBuilder(
-                        animation: _textCtrl,
-                        builder: (_, _) => Opacity(
-                          opacity: _taglineFade.value,
-                          child: Text(
-                            'Swipe. Match. Chat',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.cream.withValues(alpha: 0.7),
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ),
-                      ).animate(delay: 700.ms)
-                        .fadeIn(duration: 600.ms),
-                    ],
+
+                const SizedBox(height: 10),
+
+                // ── Tagline ────────────────────────────────────────────────
+                AnimatedBuilder(
+                  animation: _textCtrl,
+                  builder: (context, child) =>Opacity(
+                    opacity: _taglineFade.value,
+                    child: Text(
+                      'Swipe. Match. Connect.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF8E8E93),
+                        letterSpacing: 1.8,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

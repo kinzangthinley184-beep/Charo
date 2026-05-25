@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/app_colors.dart';
-import '../painters/cultural_border_painter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/phone_field.dart';
 import 'otp_screen.dart';
+
+const _bg       = Color(0xFF0A0A0A);
+const _field    = Color(0xFF141414);
+const _border   = Color(0xFF333333);
+const _labelClr = Color(0xFF555555);
+const _subClr   = Color(0xFF666666);
+const _dimClr   = Color(0xFF444444);
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,17 +19,11 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey   = GlobalKey<FormState>();
   final _phoneCtrl = TextEditingController();
-  Country _country = kCountries.first;
+  final Country _country = kCountries.first;
   bool _loading = false;
-
-  late AnimationController _enterCtrl;
-  late Animation<double> _headerSlide;
-  late Animation<double> _cardSlide;
-  late Animation<double> _fadeFull;
 
   @override
   void initState() {
@@ -33,100 +33,187 @@ class _LoginScreenState extends State<LoginScreen>
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
-
-    _enterCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
-
-    _headerSlide = Tween<double>(begin: -40.0, end: 0.0).animate(
-      CurvedAnimation(
-          parent: _enterCtrl,
-          curve: const Interval(0.0, 0.6, curve: Curves.easeOut)),
-    );
-    _cardSlide = Tween<double>(begin: 60.0, end: 0.0).animate(
-      CurvedAnimation(
-          parent: _enterCtrl,
-          curve: const Interval(0.2, 0.9, curve: Curves.easeOut)),
-    );
-    _fadeFull = CurvedAnimation(
-        parent: _enterCtrl,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeOut));
-
-    _enterCtrl.forward();
   }
 
   @override
   void dispose() {
-    _enterCtrl.dispose();
     _phoneCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _onContinue() async {
     if (!_formKey.currentState!.validate()) return;
+    final phoneNumber = '${_country.dialCode}${_phoneCtrl.text.trim()}';
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _loading = false);
-    Navigator.of(context).push(
-      PageRouteBuilder(
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        try {
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          if (!mounted) return;
+          Navigator.of(context).push(_slideRoute(OtpScreen(
+            phoneNumber: phoneNumber,
+            verificationId: '',
+            autoCredential: credential,
+          )));
+        } catch (_) {}
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        _snack(e.message ?? 'Verification failed. Check your number.');
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        Navigator.of(context).push(_slideRoute(OtpScreen(
+          phoneNumber: phoneNumber,
+          verificationId: verificationId,
+          resendToken: resendToken,
+        )));
+      },
+      codeAutoRetrievalTimeout: (_) {},
+      timeout: const Duration(seconds: 60),
+    );
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: const TextStyle(color: Colors.white, fontSize: 13)),
+      backgroundColor: const Color(0xFF1A1A1A),
+      behavior: SnackBarBehavior.floating,
+    ));
+  }
+
+  PageRouteBuilder<void> _slideRoute(Widget page) => PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (_, _, _) =>
-            OtpScreen(phoneNumber: '${_country.dialCode} ${_phoneCtrl.text}'),
-        transitionsBuilder: (_, animation, _, child) => SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOut,
-          )),
+        pageBuilder: (context, animation, secondary) => page,
+        transitionsBuilder: (context, animation, secondary, child) =>
+            SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+              .animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
           child: child,
         ),
-      ),
-    );
-  }
+      );
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final topPad    = MediaQuery.of(context).padding.top;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.darkBg,
+      backgroundColor: _bg,
       resizeToAvoidBottomInset: true,
-      body: AnimatedBuilder(
-        animation: _enterCtrl,
-        builder: (_, _) => FadeTransition(
-          opacity: _fadeFull,
-          child: CustomPaint(
-            painter: const CulturalBorderPainter(),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: size.height),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Transform.translate(
-                      offset: Offset(0, _headerSlide.value),
-                      child: _Header(screenWidth: size.width),
-                    ),
-                    Transform.translate(
-                      offset: Offset(0, _cardSlide.value),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-                        child: _LoginCard(
-                          formKey: _formKey,
-                          phoneCtrl: _phoneCtrl,
-                          loading: _loading,
-                          onContinue: _onContinue,
-                          onCountryChanged: (c) => _country = c,
-                        ),
-                      ),
-                    ),
-                  ],
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(28, topPad + 64, 28, bottomPad + 40),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Logo ───────────────────────────────────────────────────────
+              Text(
+                'CHARO',
+                style: GoogleFonts.inter(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                  letterSpacing: 6,
                 ),
               ),
-            ),
+              const SizedBox(height: 6),
+              const Text(
+                'CONNECT · BELONG · LOVE',
+                style: TextStyle(fontSize: 10, color: _dimClr, letterSpacing: 3),
+              ),
+
+              const SizedBox(height: 72),
+
+              // ── Headline ────────────────────────────────────────────────────
+              const Text(
+                'Enter your\nnumber',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "We'll send a one-time verification code.",
+                style: TextStyle(fontSize: 13, color: _subClr),
+              ),
+
+              const SizedBox(height: 40),
+
+              // ── Phone label ─────────────────────────────────────────────────
+              const Text(
+                'PHONE NUMBER',
+                style: TextStyle(fontSize: 10, letterSpacing: 2, color: _labelClr),
+              ),
+              const SizedBox(height: 10),
+
+              // ── Phone row ───────────────────────────────────────────────────
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Country chip (+975, Bhutan only)
+                  Container(
+                    width: 72,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: _field,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _border, width: 0.5),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _country.dialCode,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Number field
+                  Expanded(
+                    child: TextFormField(
+                      controller: _phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                      cursorColor: Colors.white,
+                      decoration: _inputDeco('Phone number'),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Required';
+                        if (v.trim().length < 6) return 'Enter a valid number';
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
+
+              // ── Button ──────────────────────────────────────────────────────
+              _PrimaryButton(
+                label: 'CONTINUE',
+                loading: _loading,
+                onTap: _onContinue,
+              ),
+
+              const SizedBox(height: 40),
+
+              // ── Terms ───────────────────────────────────────────────────────
+              const Center(
+                child: Text(
+                  'By continuing, you agree to our Terms of Service\nand Privacy Policy.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, color: _labelClr, height: 1.6),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -134,317 +221,80 @@ class _LoginScreenState extends State<LoginScreen>
   }
 }
 
-// ── Header ─────────────────────────────────────────────────────────────────────
+// ── Shared helpers ─────────────────────────────────────────────────────────────
 
-class _Header extends StatelessWidget {
-  final double screenWidth;
-  const _Header({required this.screenWidth});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: AppColors.headerGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(36),
-          bottomRight: Radius.circular(36),
-        ),
+InputDecoration _inputDeco(String hint) => InputDecoration(
+      filled: true,
+      fillColor: _field,
+      hintText: hint,
+      hintStyle: const TextStyle(color: _dimClr, fontSize: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _border, width: 0.5),
       ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(36),
-                bottomRight: Radius.circular(36),
-              ),
-              child: CustomPaint(painter: _HeaderArcPainter()),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-                28, MediaQuery.of(context).padding.top + 24, 28, 40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: AppColors.gold.withValues(alpha: 0.35)),
-                      ),
-                      child: Center(
-                        child: Text('C',
-                            style: GoogleFonts.playfairDisplay(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.gold)),
-                      ),
-                    ),
-                    const Spacer(),
-                    _BhutanBadge(),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Text('Welcome\nto Charo',
-                    style: GoogleFonts.playfairDisplay(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.cream,
-                        height: 1.15)),
-                const SizedBox(height: 12),
-                Text('Sign in to access your account',
-                    style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: AppColors.cream.withValues(alpha: 0.65),
-                        letterSpacing: 0.2)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                        width: 40, height: 2,
-                        decoration: BoxDecoration(
-                            color: AppColors.gold,
-                            borderRadius: BorderRadius.circular(1))),
-                    const SizedBox(width: 6),
-                    Container(
-                        width: 8, height: 2,
-                        color: AppColors.gold.withValues(alpha: 0.4)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _border, width: 0.5),
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.white, width: 0.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _subClr, width: 0.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _subClr, width: 0.5),
+      ),
+      errorStyle: const TextStyle(color: _subClr, fontSize: 11),
     );
-  }
-}
 
-class _BhutanBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('🇧🇹', style: TextStyle(fontSize: 16)),
-          const SizedBox(width: 6),
-          Text('Bhutan',
-              style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.85))),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeaderArcPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.04)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 60;
-
-    canvas.drawCircle(
-        Offset(size.width * 1.1, size.height * 0.2), size.width * 0.8, paint);
-    canvas.drawCircle(
-        Offset(-size.width * 0.1, size.height * 1.1), size.width * 0.7, paint);
-
-    final dotPaint = Paint()
-      ..color = AppColors.gold.withValues(alpha: 0.15)
-      ..style = PaintingStyle.fill;
-    for (int i = 0; i < 5; i++) {
-      canvas.drawCircle(
-          Offset(size.width * 0.82 + i * 6, 60), 2.0 - i * 0.3, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-// ── Login card ─────────────────────────────────────────────────────────────────
-
-class _LoginCard extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController phoneCtrl;
+class _PrimaryButton extends StatelessWidget {
+  final String label;
   final bool loading;
-  final VoidCallback onContinue;
-  final ValueChanged<Country> onCountryChanged;
+  final VoidCallback onTap;
 
-  const _LoginCard({
-    required this.formKey,
-    required this.phoneCtrl,
+  const _PrimaryButton({
+    required this.label,
     required this.loading,
-    required this.onContinue,
-    required this.onCountryChanged,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 28),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.darkBorder),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 30,
-              offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Form(
-        key: formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Phone Number',
-                style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.darkTextSecondary,
-                    letterSpacing: 0.5)),
-            const SizedBox(height: 10),
-
-            PhoneInputField(
-              controller: phoneCtrl,
-              onCountryChanged: onCountryChanged,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) {
-                  return 'Please enter your phone number';
-                }
-                if (v.trim().length < 6) return 'Enter a valid phone number';
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 13,
-                    color: AppColors.darkTextSecondary.withValues(alpha: 0.6)),
-                const SizedBox(width: 6),
-                Text("We'll send a 6-digit OTP to verify your number",
-                    style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: AppColors.darkTextSecondary
-                            .withValues(alpha: 0.7))),
-              ],
-            ),
-
-            const SizedBox(height: 28),
-
-            _GradientButton(loading: loading, onTap: onContinue, label: 'Continue'),
-
-            const SizedBox(height: 24),
-
-            Text(
-              'By continuing, you agree to our Terms of Service and Privacy Policy.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                  fontSize: 10.5,
-                  color: AppColors.darkTextSecondary.withValues(alpha: 0.55),
-                  height: 1.6),
-            ),
-          ],
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: loading ? null : onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
+        child: loading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(Colors.black),
+                ),
+              )
+            : Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.5,
+                ),
+              ),
       ),
     );
   }
 }
-
-class _GradientButton extends StatefulWidget {
-  final bool loading;
-  final VoidCallback onTap;
-  final String label;
-
-  const _GradientButton(
-      {required this.loading, required this.onTap, required this.label});
-
-  @override
-  State<_GradientButton> createState() => _GradientButtonState();
-}
-
-class _GradientButtonState extends State<_GradientButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: widget.loading
-                ? LinearGradient(colors: [
-                    AppColors.saffron.withValues(alpha: 0.5),
-                    AppColors.saffron.withValues(alpha: 0.5)
-                  ])
-                : AppColors.buttonGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: widget.loading
-                ? []
-                : [
-                    BoxShadow(
-                        color: AppColors.saffron.withValues(alpha: 0.35),
-                        blurRadius: 18,
-                        offset: const Offset(0, 6))
-                  ],
-          ),
-          child: Center(
-            child: widget.loading
-                ? const SizedBox(
-                    width: 22, height: 22,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor:
-                            AlwaysStoppedAnimation(Colors.white)))
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(widget.label,
-                          style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              letterSpacing: 0.5)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded,
-                          color: Colors.white, size: 18),
-                    ],
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-

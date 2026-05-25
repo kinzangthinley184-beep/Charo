@@ -8,7 +8,23 @@
       "Bash(flutter run *)",
       "Bash(timeout 40)",
       "Bash(Get-Content *)",
-      "Bash(flutter analyze *)"
+      "Bash(flutter analyze *)",
+      "Bash(flutter devices *)",
+      "Bash(adb devices *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(adb -s 964139246700254 shell am force-stop com.example.charo)",
+      "Bash(adb -s 964139246700254 uninstall com.example.charo)",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 964139246700254 shell am force-stop com.example.charo; & $adb -s 964139246700254 uninstall com.example.charo)",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb devices)",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 964139246700254 install -r \"C:\\\\Users\\\\acer\\\\Charo\\\\build\\\\app\\\\outputs\\\\flutter-apk\\\\app-debug.apk\" 2>&1)",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 964139246700254 shell am start -n \"com.example.charo/com.example.charo.MainActivity\" 2>&1)",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 964139246700254 shell pm list packages | Select-String \"charo\")",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 964139246700254 shell monkey -p com.charo.charo 1 2>&1)",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 964139246700254 install -r \"C:\\\\Users\\\\acer\\\\Charo\\\\build\\\\app\\\\outputs\\\\flutter-apk\\\\app-debug.apk\")",
+      "PowerShell($adb = \"C:\\\\Users\\\\acer\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; & $adb -s 964139246700254 shell am start -n \"com.charo.charo/.MainActivity\" 2>&1)",
+      "Bash(gradlew signingReport)",
+      "Bash(findstr /i \"sha\")"
     ]
   }
 }

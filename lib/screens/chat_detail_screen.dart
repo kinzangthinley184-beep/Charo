@@ -1,22 +1,24 @@
-import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/app_colors.dart';
 import '../models/app_user.dart';
-import '../data/mock_data.dart';
+import '../state/app_state.dart';
 import '../widgets/verified_badge.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final AppUser user;
+  final String currentUserId;
+  // Legacy params kept for callers that pass them; ignored in favour of live stream.
   final List<ChatMessage> messages;
   final void Function(String) onSendMessage;
-  // Called when an auto-reply arrives so the parent can update shared state.
   final void Function(String userId, String text)? onReceiveMessage;
 
   const ChatDetailScreen({
     super.key,
     required this.user,
+    required this.currentUserId,
     required this.messages,
     required this.onSendMessage,
     this.onReceiveMessage,
@@ -29,26 +31,10 @@ class ChatDetailScreen extends StatefulWidget {
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final _textCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
-  late List<ChatMessage> _messages;
 
-  static const _autoReplies = [
-    'That sounds amazing! 😊',
-    'Tell me more about that!',
-    'Haha, yes! Bhutan is so beautiful 🏔️',
-    'I totally agree!',
-    'We should definitely meet up in Thimphu!',
-    'Have you tried the Ema Datshi there? 🌶️',
-    'That\'s so cool! Where exactly?',
-    'I love that area! Great hiking trails.',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _messages = widget.messages
-        .map((m) => m.senderId != kCurrentUserId ? m.copyWith(isRead: true) : m)
-        .toList();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  String get _chatId {
+    final ids = [widget.currentUserId, widget.user.id]..sort();
+    return '${ids[0]}_${ids[1]}';
   }
 
   @override
@@ -61,34 +47,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void _send() {
     final text = _textCtrl.text.trim();
     if (text.isEmpty) return;
-    setState(() {
-      _messages.add(ChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        senderId: kCurrentUserId,
-        text: text,
-        timestamp: DateTime.now(),
-        isRead: true,
-      ));
-      _textCtrl.clear();
-    });
+    _textCtrl.clear();
+    context.read<AppState>().sendMessage(widget.user.id, text);
     widget.onSendMessage(text);
     _scrollToBottom();
-
-    final reply = _autoReplies[_messages.length % _autoReplies.length];
-    Timer(Duration(milliseconds: 800 + math.Random().nextInt(600)), () {
-      if (!mounted) return;
-      setState(() {
-        _messages.add(ChatMessage(
-          id: '${DateTime.now().millisecondsSinceEpoch}r',
-          senderId: widget.user.id,
-          text: reply,
-          timestamp: DateTime.now(),
-          isRead: true,
-        ));
-      });
-      _scrollToBottom();
-      widget.onReceiveMessage?.call(widget.user.id, reply);
-    });
   }
 
   void _scrollToBottom() {
@@ -120,7 +82,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         title: Row(
           children: [
             Container(
-              width: 40, height: 40,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 gradient: LinearGradient(colors: widget.user.gradient),
                 shape: BoxShape.circle,
@@ -186,39 +149,72 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             ),
           ),
           Expanded(
-            child: _messages.isEmpty
-                ? _EmptyChat(user: widget.user)
-                : ListView.builder(
-                    controller: _scrollCtrl,
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                    itemCount: _messages.length,
-                    itemBuilder: (_, i) {
-                      final msg = _messages[i];
-                      final isMe = msg.senderId == kCurrentUserId;
-                      final showTime = i == 0 ||
-                          _messages[i]
-                                  .timestamp
-                                  .difference(_messages[i - 1].timestamp)
-                                  .inMinutes >
-                              5;
-                      return Column(
-                        children: [
-                          if (showTime)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                _formatTime(msg.timestamp),
-                                style: GoogleFonts.poppins(
-                                    fontSize: 11,
-                                    color: AppColors.darkTextSecondary),
-                              ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('chats')
+                  .doc(_chatId)
+                  .collection('messages')
+                  .orderBy('timestamp')
+                  .snapshots(),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting &&
+                    !snap.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                        color: AppColors.saffron, strokeWidth: 2),
+                  );
+                }
+                final docs = snap.data?.docs ?? [];
+                if (docs.isEmpty) return _EmptyChat(user: widget.user);
+
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => _scrollToBottom());
+
+                return ListView.builder(
+                  controller: _scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  itemCount: docs.length,
+                  itemBuilder: (_, i) {
+                    final data = docs[i].data() as Map<String, dynamic>;
+                    final senderId = data['senderId'] as String? ?? '';
+                    final text = data['text'] as String? ?? '';
+                    final ts = (data['timestamp'] as Timestamp?)?.toDate() ??
+                        DateTime.now();
+                    final isMe = senderId == widget.currentUserId;
+                    final showTime = i == 0 ||
+                        ts
+                                .difference((docs[i - 1].data()
+                                        as Map<String, dynamic>)['timestamp']
+                                    is Timestamp
+                                ? ((docs[i - 1].data() as Map<String, dynamic>)[
+                                        'timestamp'] as Timestamp)
+                                    .toDate()
+                                : DateTime.now())
+                                .inMinutes
+                                .abs() >
+                            5;
+                    return Column(
+                      children: [
+                        if (showTime)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              _formatTime(ts),
+                              style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: AppColors.darkTextSecondary),
                             ),
-                          _MessageBubble(message: msg, isMe: isMe),
-                        ],
-                      );
-                    },
-                  ),
+                          ),
+                        _MessageBubble(
+                          text: text,
+                          isMe: isMe,
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
           ),
           _InputBar(controller: _textCtrl, onSend: _send),
         ],
@@ -239,10 +235,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 }
 
 class _MessageBubble extends StatelessWidget {
-  final ChatMessage message;
+  final String text;
   final bool isMe;
 
-  const _MessageBubble({required this.message, required this.isMe});
+  const _MessageBubble({required this.text, required this.isMe});
 
   @override
   Widget build(BuildContext context) {
@@ -250,12 +246,12 @@ class _MessageBubble extends StatelessWidget {
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: EdgeInsets.only(
-          top: 4, bottom: 4,
+          top: 4,
+          bottom: 4,
           left: isMe ? 60 : 0,
           right: isMe ? 0 : 60,
         ),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isMe ? AppColors.saffron : AppColors.darkElevated,
           borderRadius: BorderRadius.only(
@@ -272,7 +268,7 @@ class _MessageBubble extends StatelessWidget {
           ],
         ),
         child: Text(
-          message.text,
+          text,
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: isMe ? Colors.white : AppColors.darkTextPrimary,
@@ -314,11 +310,6 @@ class _InputBarState extends State<_InputBar> {
     if (has != _hasText) setState(() => _hasText = has);
   }
 
-  void _onSend() {
-    if (!_hasText) return;
-    widget.onSend();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -352,7 +343,7 @@ class _InputBarState extends State<_InputBar> {
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 10),
                 ),
-                onSubmitted: (_) => _onSend(),
+                onSubmitted: (_) => widget.onSend(),
               ),
             ),
           ),
@@ -361,9 +352,10 @@ class _InputBarState extends State<_InputBar> {
             opacity: _hasText ? 1.0 : 0.35,
             duration: const Duration(milliseconds: 200),
             child: GestureDetector(
-              onTap: _onSend,
+              onTap: _hasText ? widget.onSend : null,
               child: Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: const BoxDecoration(
                   gradient: AppColors.buttonGradient,
                   shape: BoxShape.circle,
@@ -390,7 +382,8 @@ class _EmptyChat extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 80, height: 80,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: user.gradient),
               shape: BoxShape.circle,
@@ -411,8 +404,7 @@ class _EmptyChat extends StatelessWidget {
           const SizedBox(height: 6),
           Text('You matched! Start the conversation.',
               style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: AppColors.darkTextSecondary)),
+                  fontSize: 13, color: AppColors.darkTextSecondary)),
         ],
       ),
     );

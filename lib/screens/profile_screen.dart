@@ -25,44 +25,21 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late AppUser _currentUser;
-
-  static const String _mockName = 'Kinzang, 24';
-  static const String _mockLocation = 'Thimphu, Bhutan';
-  static const List<String> _mockInterests = ['Archery', 'Ema Datshi', 'Tsechu', 'Hiking', 'GNH'];
-
-  @override
-  void initState() {
-    super.initState();
-    _currentUser = AppUser(
-      id: '',
-      name: 'User',
-      age: 0,
-      gender: '',
-      bio: '',
-      profileImage: '',
-      interests: [],
-      location: 'Bhutan',
-      verified: false,
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final user = context.read<AppState>().currentUser;
-    if (user != null && user.id != _currentUser.id) {
-      setState(() => _currentUser = user);
-    }
-  }
+  AppUser _currentUser = AppUser(
+    id: '', name: '', age: 0, gender: '', bio: '',
+    profileImage: '', interests: [], location: '', verified: false,
+  );
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AppState>().currentUser;
+    if (user != null) _currentUser = user;
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -210,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _mockName,
+              _currentUser.age > 0 ? '${_currentUser.name}, ${_currentUser.age}' : _currentUser.name,
               style: GoogleFonts.outfit(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
@@ -229,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Icon(Icons.location_on, size: 10, color: Colors.white.withValues(alpha: 0.4)),
             const SizedBox(width: 3),
             Text(
-              _mockLocation.toUpperCase(),
+              _currentUser.location.toUpperCase(),
               style: GoogleFonts.inter(
                 fontSize: 10,
                 letterSpacing: 1.5,
@@ -243,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildResonance() {
-    final interests = _currentUser.interests.isNotEmpty ? _currentUser.interests : _mockInterests;
+    final interests = _currentUser.interests;
     if (interests.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -343,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSpacing: 2,
               childAspectRatio: 1.0,
             ),
-            itemCount: 5,
+            itemCount: 4,
             itemBuilder: (_, i) => ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: _buildEmptyPhotoSlot(i + 1),
@@ -404,7 +381,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       MaterialPageRoute(
         builder: (_) => EditProfileScreen(
           user: _currentUser,
-          onUpdate: (updated) => setState(() => _currentUser = updated),
+          onUpdate: (updated) => setState(() {}),
         ),
       ),
     );
@@ -840,7 +817,7 @@ class _CompleteProfileSheetState extends State<_CompleteProfileSheet> {
                   _row(
                     icon: Icons.photo_camera_rounded,
                     title: 'Add photos',
-                    subtitle: photos.isEmpty ? 'Add up to 6 photos' : '${photos.length} photos added',
+                    subtitle: photos.isEmpty ? 'Add up to 5 photos' : '${photos.length} photos added',
                     isDone: photos.isNotEmpty,
                     onTap: () => showModalBottomSheet(
                       context: context,
@@ -1488,7 +1465,7 @@ class _PhotosEditorSheet extends StatefulWidget {
 }
 
 class _PhotosEditorSheetState extends State<_PhotosEditorSheet> {
-  static const int _maxSlots = 6;
+  static const int _maxSlots = 5;
   late List<String?> _photos;
   final Map<int, double> _progress = {};
   final _picker = ImagePicker();
